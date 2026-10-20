@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+
+# Medical images never go into the repository
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.tif
+*.tiff
+*.bmp
+*.dcm
+
+# TypeScript build info
+*.tsbuildinfo

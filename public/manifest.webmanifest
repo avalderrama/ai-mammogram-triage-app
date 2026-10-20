@@ -1,0 +1,15 @@
+{
+  "name": "Triaje de mamografías (prueba)",
+  "short_name": "Triaje mamo",
+  "description": "Triaje orientativo de mamografías por BI-RADS. Herramienta de investigación.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f8fa",
+  "theme_color": "#1d5bd8",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
