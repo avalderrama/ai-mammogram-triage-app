@@ -33,13 +33,22 @@ flowchart TB
 
 | Layer | Responsibility | Must not import |
 |---|---|---|
-| `domain` | Result types (`Analysis`, `BreastResult`, `ViewResult`) and pure rules: ordering by urgency, whether the result is partial, study quality warnings | React, MCP SDK, zod, other layers |
+| `domain` | Result types (`Analysis`, `BreastResult`, `ViewResult`, `SuspiciousRegion`) and pure rules: ordering by urgency, whether the result is partial, study quality warnings | React, MCP SDK, zod, other layers |
 | `application` | Use cases: `createAnalyzeMammogram` (validates, prepares, calls and translates errors into a `Failure`) and `createConnectionSettings`. Ports: `TriageGateway`, `ImagePreparer`, `SettingsRepository`. Safe-URL rule | React, SDK, zod, infrastructure, presentation |
-| `infrastructure` | `McpTriageGateway` (SDK `@modelcontextprotocol/client` v2, loaded lazily), `resultMapping` (zod ↔ domain), `BrowserImagePreparer`, `BrowserSettingsRepository`, service worker registration | React, presentation |
+| `infrastructure` | `McpTriageGateway` (SDK `@modelcontextprotocol/client` v2), loaded on the first request by `LazyTriageGateway`; `resultMapping` (zod ↔ domain), `BrowserImagePreparer`, `BrowserSettingsRepository`, service worker registration | React, presentation |
 | `presentation` | React components, hash routes, UI text in English and Spanish (`i18n/`) and token-based styles | SDK, zod, infrastructure |
 | `main.tsx` | Creates the implementations, injects them into the app and wraps it in `I18nProvider` | — |
 
 ESLint (`no-restricted-imports` per folder, in `eslint.config.js`) enforces these rules.
+
+### Presentation components
+
+| Component | File | What it does |
+|---|---|---|
+| `ImagePicker` | `components/ImagePicker.tsx` | Camera and gallery pickers. Variant `tiles` (default): two large tiles with a hint, used on Home and in the empty Review state. Variant `compact`: two secondary buttons, used to change the image in Review |
+| `Probabilities` | `components/Probabilities.tsx` | One stacked bar with the three BI-RADS groups (decorative, `aria-hidden`) plus a text legend with the percentages |
+| `LesionViewer` | `components/LesionViewer.tsx` | The heatmap of a view with numbered boxes on the suspicious regions (1 = strongest), placed in percentages of the image so they stay aligned at any size. A **Show markers** checkbox hides the boxes. Below, a text list ("Area N: depth, vertical part of the breast") repeats each location for screen readers and for anyone who hides the boxes. It shows a note when no region stands out and, without a heatmap, the reason (low resolution or not generated) |
+| `LevelBadge`, `Banner`, `FailurePanel`, `Disclaimer` | `components/Feedback.tsx` | Level with icon + text + color, view-wide messages, errors with a way out and the reference code, the indicative-result notice |
 
 ## 3. Path of an analysis
 
@@ -60,12 +69,19 @@ sequenceDiagram
     U->>P: prepare (keeps it as is or re-encodes to JPEG ≤ limit, ≤ 4096 px)
     U->>G: analyze(base64, views)
     G->>S: initialize + tools/call mammo_analyze_mammogram
-    S-->>G: structuredContent + heatmaps
-    G->>G: validates with zod, maps to domain, reads PNG size
+    S-->>G: structuredContent (with regions per view) + heatmaps
+    G->>G: validates with zod, maps to domain (regions included), reads PNG size
     G-->>U: Analysis or TriageError(kind)
     U-->>V: Outcome {ok, analysis} | {ok:false, failure}
     V-->>M: Result (or error with a way out and a reference code)
 ```
+
+Each view of the result carries `regions`: up to three suspicious regions from the server's patch model, strongest
+first, each with a box normalized from 0 to 1 to the heatmap image, a `score`, a `depth` (`posterior`, `middle`,
+`anterior`) and a `vertical` third (`upper`, `middle`, `lower`). `resultMapping.ts` validates them with zod and
+defaults the list to `[]` when an older server does not send it. `LesionViewer` draws them over the heatmap. What
+they mean is explained in the server's
+[scores-and-levels.md](https://github.com/avalderrama/ai-mammogram-triage/blob/main/docs/scores-and-levels.md).
 
 The "optional views" are the optional fields in **Review image**. The number of views is sent when the user picks
 one; the breast side and projection of each view are sent when at least one of them is set. Views of the same breast
@@ -134,9 +150,11 @@ be retried and a reference code:
 | `not_a_mammogram`, `unreadable_image`, `too_large`, `server_busy`, `unexpected` | MCP tool codes |
 | `unauthorized` (401), `server_misconfigured` (421/403), `too_large` (413), `rate_limited` (429 with `Retry-After`) | HTTP responses |
 | `offline`, `server_unreachable`, `timeout`, `cancelled` | Network, timeout or the user |
+| `app_outdated` | `LazyTriageGateway` could not download the MCP client chunk while the browser is online. Typically a newer deployment removed the chunk this tab expects. When the browser is offline, the same failure is reported as `offline` |
 
-`FAILURE_FIX` in `messages.ts` says where the user can fix each failure (Settings, the image, or retry); it does not
-depend on the language.
+`FAILURE_FIX` in `messages.ts` says where the user can fix each failure (Settings, the image, retry, or reload); it
+does not depend on the language. `app_outdated` is not retryable: `FailurePanel` replaces the view's buttons with a
+single **Reload the page** button. After a failed download the gateway forgets it, so the next request tries again.
 
 ## 7. Service worker
 

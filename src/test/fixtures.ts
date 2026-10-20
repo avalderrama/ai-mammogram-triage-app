@@ -11,6 +11,7 @@ export const breast = (overrides: Partial<BreastResult> = {}): BreastResult => (
     panel: 1, side: 'R', view: 'MLO', probabilities: { routine: 0.1, shortFollowUp: 0.1, biopsy: 0.8 },
     qualityIssues: [], heatmap: { url: 'data:image/png;base64,AAAA', width: 400, height: 768 },
     heatmapUnavailableReason: null,
+    regions: [{ x: 0.15, y: 0.75, width: 0.15, height: 0.125, score: 0.98, depth: 'middle', vertical: 'lower' }],
   }],
   ...overrides,
 });
@@ -37,7 +38,8 @@ export const serverPayload = {
     quality_issues: ['blurry'],
     views: [
       { panel: 1, side: 'L', view: 'CC', probabilities: { birads_1_2: 0.6, birads_3: 0.3, birads_4_5: 0.1 },
-        quality_issues: ['blurry'], has_heatmap: true, heatmap_unavailable_reason: null },
+        quality_issues: ['blurry'], has_heatmap: true, heatmap_unavailable_reason: null,
+        regions: [{ x: 0.5, y: 0.2, width: 0.15, height: 0.12, score: 0.7, depth: 'anterior', vertical: 'upper' }] },
       { panel: 2, side: 'L', view: 'MLO', probabilities: { birads_1_2: 0.6, birads_3: 0.3, birads_4_5: 0.1 },
         quality_issues: [], has_heatmap: false, heatmap_unavailable_reason: 'low_resolution: needs 1500 px' },
     ],

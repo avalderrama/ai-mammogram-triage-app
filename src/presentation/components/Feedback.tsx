@@ -61,7 +61,11 @@ export function FailurePanel({ failure, headingLevel = 2, actions }:
       {failure.rejectedPanels && failure.rejectedPanels.length > 0 && (
         <p className="text-secondary">{t.failurePanel.reviewedPanels(failure.rejectedPanels.length)}</p>
       )}
-      <div className="actions">{actions}</div>
+      <div className="actions">
+        {failure.kind === 'app_outdated'
+          ? <button type="button" className="button button--primary" onClick={() => window.location.reload()}>{t.reload}</button>
+          : actions}
+      </div>
       <p className="text-secondary failure__reference">{t.failurePanel.reference} <code>{failure.correlationId}</code></p>
     </section>
   );

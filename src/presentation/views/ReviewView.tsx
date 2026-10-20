@@ -74,66 +74,70 @@ export function ReviewView({ file, previewUrl, options, onOptionsChange, onAnaly
   return (
     <>
       <h1 ref={heading} tabIndex={-1}>{r.title}</h1>
-      <figure className="preview">
-        {previewUrl && <img src={previewUrl} alt={r.previewAlt} />}
-        <figcaption className="text-secondary">{file.name} · {t.megabytes(file.size)}</figcaption>
-      </figure>
-      <form onSubmit={submit} className="stack" noValidate>
-        <fieldset className="fieldset">
-          <legend>{r.panelCountLegend}</legend>
-          {COUNT_CHOICES.map((c) => (
-            <label key={String(c.value)} className="choice">
-              <input type="radio" name="panel-count" value={String(c.value)} checked={options.panelCount === c.value}
-                onChange={() => onOptionsChange(withCount(c.value))} />
-              {r.panelCounts[c.key]}
-            </label>
-          ))}
-        </fieldset>
-        {options.panelCount !== 'auto' && (
-          <details className="details">
-            <summary>{r.layoutSummary}</summary>
-            <p className="text-secondary">{r.layoutHint}</p>
-            {options.sides.map((side, i) => (
-              <fieldset key={i} className="fieldset fieldset--inline">
-                <legend>{r.panelLegend(i + 1)}</legend>
-                <label className="field">
-                  <span className="field__label">{r.sideLabel}</span>
-                  <select value={side} onChange={(e) => setPanel(i, 'sides', e.target.value)}>
-                    <option value="unknown">{r.unknownOption}</option>
-                    <option value="R">{r.right}</option>
-                    <option value="L">{r.left}</option>
-                  </select>
+      <div className="split">
+        <figure className="preview">
+          {previewUrl && <img src={previewUrl} alt={r.previewAlt} />}
+          <figcaption className="text-secondary">{file.name} · {t.megabytes(file.size)}</figcaption>
+        </figure>
+        <div className="card stack">
+          <form onSubmit={submit} className="stack" noValidate>
+            <fieldset className="fieldset">
+              <legend>{r.panelCountLegend}</legend>
+              {COUNT_CHOICES.map((c) => (
+                <label key={String(c.value)} className="choice">
+                  <input type="radio" name="panel-count" value={String(c.value)} checked={options.panelCount === c.value}
+                    onChange={() => onOptionsChange(withCount(c.value))} />
+                  {r.panelCounts[c.key]}
                 </label>
-                <label className="field">
-                  <span className="field__label">{r.viewLabel}</span>
-                  <select value={options.views[i]} onChange={(e) => setPanel(i, 'views', e.target.value)}>
-                    <option value="unknown">{r.unknownOption}</option>
-                    <option value="CC">{r.cc}</option>
-                    <option value="MLO">{r.mlo}</option>
-                  </select>
-                </label>
-              </fieldset>
-            ))}
-          </details>
-        )}
-        {blocked && (
-          <Banner tone="info">
-            <p id={reasonId}>
-              {blocked} {!configured && <a href={ROUTES.settings}>{r.goToSettings}</a>}
-            </p>
-          </Banner>
-        )}
-        <div className="actions">
-          <button type="submit" className="button button--primary" aria-disabled={blocked !== null || busy}
-            aria-describedby={blocked ? reasonId : undefined}>
-            {r.analyze}
-          </button>
+              ))}
+            </fieldset>
+            {options.panelCount !== 'auto' && (
+              <details className="details">
+                <summary>{r.layoutSummary}</summary>
+                <p className="text-secondary">{r.layoutHint}</p>
+                {options.sides.map((side, i) => (
+                  <fieldset key={i} className="fieldset fieldset--inline">
+                    <legend>{r.panelLegend(i + 1)}</legend>
+                    <label className="field">
+                      <span className="field__label">{r.sideLabel}</span>
+                      <select value={side} onChange={(e) => setPanel(i, 'sides', e.target.value)}>
+                        <option value="unknown">{r.unknownOption}</option>
+                        <option value="R">{r.right}</option>
+                        <option value="L">{r.left}</option>
+                      </select>
+                    </label>
+                    <label className="field">
+                      <span className="field__label">{r.viewLabel}</span>
+                      <select value={options.views[i]} onChange={(e) => setPanel(i, 'views', e.target.value)}>
+                        <option value="unknown">{r.unknownOption}</option>
+                        <option value="CC">{r.cc}</option>
+                        <option value="MLO">{r.mlo}</option>
+                      </select>
+                    </label>
+                  </fieldset>
+                ))}
+              </details>
+            )}
+            {blocked && (
+              <Banner tone="info">
+                <p id={reasonId}>
+                  {blocked} {!configured && <a href={ROUTES.settings}>{r.goToSettings}</a>}
+                </p>
+              </Banner>
+            )}
+            <div className="actions">
+              <button type="submit" className="button button--primary button--block" aria-disabled={blocked !== null || busy}
+                aria-describedby={blocked ? reasonId : undefined}>
+                {r.analyze}
+              </button>
+            </div>
+          </form>
+          <section aria-labelledby="change-title" className="stack stack--tight divider-top">
+            <h2 id="change-title" className="heading-sm">{r.wrongImage}</h2>
+            <ImagePicker onPick={onPick} variant="compact" />
+          </section>
         </div>
-      </form>
-      <section aria-labelledby="change-title" className="stack">
-        <h2 id="change-title" className="heading-sm">{r.wrongImage}</h2>
-        <ImagePicker onPick={onPick} primary="none" />
-      </section>
+      </div>
     </>
   );
 }

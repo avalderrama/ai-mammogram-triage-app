@@ -25,6 +25,18 @@ export interface HeatmapImage {
   readonly height: number;
 }
 
+/** One of the most suspicious areas found by the high-resolution model. Box normalized (0-1) to the heatmap. */
+export interface SuspiciousRegion {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly score: number;
+  /** From the chest wall (posterior) to the nipple (anterior). */
+  readonly depth: 'posterior' | 'middle' | 'anterior';
+  readonly vertical: 'upper' | 'middle' | 'lower';
+}
+
 export interface ViewResult {
   readonly panel: number;
   readonly side: BreastSide;
@@ -33,6 +45,8 @@ export interface ViewResult {
   readonly qualityIssues: readonly QualityIssue[];
   readonly heatmap: HeatmapImage | null;
   readonly heatmapUnavailableReason: string | null;
+  /** Most suspicious first; empty when the image was too small for the high-resolution model. */
+  readonly regions: readonly SuspiciousRegion[];
 }
 
 export interface BreastResult {

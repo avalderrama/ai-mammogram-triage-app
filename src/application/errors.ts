@@ -10,6 +10,7 @@ export type FailureKind =
   | 'unauthorized'
   | 'server_misconfigured'
   | 'server_busy'
+  | 'app_outdated'
   | 'rate_limited'
   | 'offline'
   | 'server_unreachable'

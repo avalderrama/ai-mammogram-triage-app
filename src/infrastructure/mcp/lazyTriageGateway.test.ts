@@ -5,6 +5,8 @@ afterEach(() => {
   vi.resetModules();
 });
 
+const settings = { serverUrl: 'https://x.example/mcp', accessKey: 'k' };
+
 describe('LazyTriageGateway', () => {
   it('loads the MCP client once and retries after a failed chunk download', async () => {
     let attempts = 0;
@@ -16,8 +18,7 @@ describe('LazyTriageGateway', () => {
     });
     const { LazyTriageGateway } = await import('./lazyTriageGateway');
     const gateway = new LazyTriageGateway();
-    const settings = { serverUrl: 'https://x.example/mcp', accessKey: 'k' };
-    await expect(gateway.testConnection(settings)).rejects.toThrow();
+    await expect(gateway.testConnection(settings)).rejects.toMatchObject({ kind: 'app_outdated' });
     await gateway.testConnection(settings);
     await gateway.testConnection(settings);
     expect(testConnection).toHaveBeenCalledTimes(2);

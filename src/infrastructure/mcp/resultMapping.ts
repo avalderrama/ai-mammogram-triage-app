@@ -8,6 +8,12 @@ const view = z.enum(['CC', 'MLO', 'unknown']);
 const quality = z.array(z.enum(['low_resolution', 'blurry', 'glare', 'small_breast']));
 const probability = z.number().min(0).max(1);
 const probabilities = z.object({ birads_1_2: probability, birads_3: probability, birads_4_5: probability });
+const unit = z.number().min(0).max(1);
+const region = z.object({
+  x: unit, y: unit, width: unit, height: unit, score: unit,
+  depth: z.enum(['posterior', 'middle', 'anterior']),
+  vertical: z.enum(['upper', 'middle', 'lower']),
+});
 const rejected = z.object({ panel: z.number().int(), mammogram_confidence: probability });
 
 const analysisSchema = z.object({
@@ -30,6 +36,8 @@ const analysisSchema = z.object({
       quality_issues: quality,
       has_heatmap: z.boolean(),
       heatmap_unavailable_reason: z.string().nullable(),
+      // Older servers don't send regions.
+      regions: z.array(region).default([]),
     })),
   })).min(1),
 });
@@ -107,6 +115,7 @@ export function toAnalysis(result: ToolResultLike): Analysis {
         qualityIssues: v.quality_issues,
         heatmap: v.has_heatmap ? images[next++] ?? null : null,
         heatmapUnavailableReason: v.heatmap_unavailable_reason,
+        regions: v.regions,
       })),
     })),
   };

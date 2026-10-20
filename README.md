@@ -3,7 +3,8 @@
 An installable web app (PWA) for physicians to try out. You photograph a mammogram on a screen or on film, and the app
 asks the MCP server [`ai-mammogram-triage`](https://github.com/avalderrama/ai-mammogram-triage) for a **priority level
 for each breast**: High priority, Review or No suspicious findings. The result includes probabilities per BI-RADS
-group, photo-quality warnings and, when the resolution allows it, a heatmap.
+group, photo-quality warnings and, when the resolution allows it, a heatmap with up to three numbered boxes on the
+areas the model found most suspicious.
 
 The interface is in **English by default** and can be switched to **Spanish** with the Language selector in the
 header.
@@ -45,9 +46,9 @@ Open `http://127.0.0.1:5173`, go to **Settings** and enter the server address (i
 
 | Document | For | Contents |
 |---|---|---|
-| [User guide](docs/user-guide.md) | Physicians | Setup, taking a good photo, analyzing, reading the result, changing the language and fixing errors |
-| [Architecture](docs/architecture.md) | Developers | Layers, the path of an analysis, views and navigation, languages, errors and the service worker, with diagrams |
-| [Design and accessibility](docs/design-and-accessibility.md) | Developers / designers | Compliance with the UX rules, tokens, text and translations, and verification |
+| [User guide](docs/user-guide.md) | Physicians | Setup, taking a good photo, analyzing, reading the result and the marked areas, changing the language and fixing errors |
+| [Architecture](docs/architecture.md) | Developers | Layers, components, the path of an analysis, views and navigation, languages, errors and the service worker, with diagrams |
+| [Design and accessibility](docs/design-and-accessibility.md) | Developers / designers | Compliance with the UX rules, tokens, layout and breakpoints, text and translations, and verification |
 | [Development](docs/development.md) | Developers | Tests, deployment, dependencies and common changes |
 
 How the scores are computed and what they mean: see `docs/scores-and-levels.md` in the

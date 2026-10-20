@@ -82,6 +82,10 @@ export const es: Messages = {
       body: () => 'La configuración del servidor no admite esta dirección. El responsable del piloto debe añadirla a '
         + 'MAMMO_ALLOWED_HOSTS (y la dirección de esta app a MAMMO_ALLOWED_ORIGINS).',
     },
+    app_outdated: {
+      title: 'Hay una versión nueva de la app',
+      body: () => 'Recarga la página para usarla. Los ajustes se conservan; vuelve a elegir la imagen después de recargar.',
+    },
     server_busy: {
       title: 'El servidor está ocupado',
       body: () => 'Es temporal: está analizando otras imágenes. Vuelve a intentarlo en unos segundos.',
@@ -113,11 +117,17 @@ export const es: Messages = {
       body: () => 'Vuelve a intentarlo. Si se repite, comparte el código de referencia con el responsable del piloto.',
     },
   },
+  reload: 'Recargar la página',
   failurePanel: {
     reviewedPanels: (n) => `Vistas revisadas: ${n}. Ninguna se reconoció como mamografía.`,
     reference: 'Código de referencia:',
   },
-  picker: { takePhoto: 'Tomar foto', choosePhoto: 'Elegir imagen guardada' },
+  picker: {
+    takePhoto: 'Tomar foto',
+    choosePhoto: 'Elegir imagen guardada',
+    takePhotoHint: 'Usa la cámara del celular sobre la pantalla o la placa',
+    choosePhotoHint: 'Una foto, captura de pantalla o archivo exportado',
+  },
   home: {
     docTitle: 'Inicio',
     title: 'Triaje orientativo de mamografías',
@@ -126,6 +136,13 @@ export const es: Messages = {
     beforeStartTitle: 'Antes de empezar',
     beforeStartBody: 'Configura la dirección del servidor y la clave de acceso en',
     settingsLink: 'Ajustes',
+    eyebrow: 'Piloto de investigación',
+    howTitle: 'Cómo funciona',
+    howSteps: [
+      { title: 'Fotografía', body: 'Toma una foto de la mamografía o elige una imagen guardada.' },
+      { title: 'Protege', body: 'Los datos personales de la imagen se tapan antes del análisis.' },
+      { title: 'Prioriza', body: 'Obtén un nivel de prioridad por mama y mira dónde se fija el modelo.' },
+    ],
     tipsTitle: 'Cómo tomar una buena foto',
     tips: [
       'Encuadra una sola mamografía o las vistas que quieras comparar, sin el resto de la pantalla.',
@@ -205,6 +222,15 @@ export const es: Messages = {
       : 'no se generó para esta vista.'}`,
     heatmapAlt: (name) => `Mapa de calor de ${name}: las zonas en rojo son las que más llamaron la atención del modelo.`,
     heatmapCaption: (name) => `${name}. En rojo, las zonas que más llamaron la atención del modelo.`,
+    regionsTitle: 'Dónde mira el modelo',
+    regionsNote: 'Los recuadros numerados marcan las zonas más sospechosas, de mayor a menor. Orientan la lectura; no '
+      + 'son el contorno de una lesión.',
+    showMarkers: 'Mostrar marcadores',
+    region: (n, depth, vertical) => `Zona ${n}: ${({ posterior: 'tercio posterior (cerca de la pared torácica)',
+      middle: 'tercio medio', anterior: 'tercio anterior (cerca del pezón)' })[depth]}, parte ${({ upper: 'superior',
+      middle: 'media', lower: 'inferior' })[vertical]} de la mama`,
+    noRegions: 'En esta vista no destaca claramente ninguna zona.',
+    summaryNextStep: 'Lee este estudio con el flujo habitual del radiólogo; este resultado solo ayuda a decidir el orden.',
   },
   settings: {
     docTitle: 'Ajustes',

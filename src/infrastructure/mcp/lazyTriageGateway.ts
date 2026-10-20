@@ -1,4 +1,5 @@
 import type { Analysis } from '../../domain/triage';
+import { TriageError } from '../../application/errors';
 import type { AnalysisRequest, ConnectionSettings, TriageGateway } from '../../application/ports';
 
 /** Loads the MCP SDK only when the first request is made, keeping the initial page light (UX-PRF-004). */
@@ -6,8 +7,13 @@ export class LazyTriageGateway implements TriageGateway {
   private loading: Promise<TriageGateway> | null = null;
 
   private gateway(): Promise<TriageGateway> {
-    this.loading ??= import('./mcpTriageGateway').then((m) => new m.McpTriageGateway());
-    this.loading.catch(() => { this.loading = null; }); // a failed chunk download can be retried
+    // A failed download is either the network (retry later) or a newer deployment that removed this tab's chunk
+    // (only a page reload fixes it). Offline is reported as such; otherwise the user is asked to reload.
+    this.loading ??= import('./mcpTriageGateway').then((m) => new m.McpTriageGateway() as TriageGateway)
+      .catch((cause: unknown) => {
+        this.loading = null;
+        throw new TriageError(typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'app_outdated', { cause });
+      });
     return this.loading;
   }
 

@@ -17,7 +17,7 @@ const PATHS = {
 export type IconName = keyof typeof PATHS;
 
 export function Icon({ name, label, size = 'md', className }:
-  { name: IconName; label?: string; size?: 'md' | 'lg'; className?: string }) {
+  { name: IconName; label?: string; size?: 'md' | 'lg' | 'xl'; className?: string }) {
   return (
     <svg className={`icon icon--${size}${className ? ` ${className}` : ''}`} viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
