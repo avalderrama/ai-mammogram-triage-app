@@ -41,7 +41,7 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 
 ## Tests
 
-52 tests in 8 files:
+53 tests in 8 files:
 
 | File | What it covers |
 |---|---|
@@ -49,10 +49,10 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 | `application/analyzeMammogram.test.ts` | Validation, steps, error translation and cancellation |
 | `infrastructure/mcp/resultMapping.test.ts` | Contract with the server (zod), order and size of the heatmaps, and error codes |
 | `infrastructure/mcp/mcpTriageGateway.test.ts` | HTTP responses and SDK errors → `kind` |
-| `infrastructure/mcp/lazyTriageGateway.test.ts` | Lazy loading and retry if the download fails |
+| `infrastructure/mcp/lazyTriageGateway.test.ts` | Lazy loading, `app_outdated` when the download fails, and a new attempt on the next request |
 | `infrastructure/browserSettingsRepository.test.ts` | The key never goes to `localStorage`; the server URL is remembered |
 | `infrastructure/serviceWorker.test.ts` | The service worker does not intercept the MCP server or store images |
-| `presentation/App.test.tsx` | Full flows (English by default), five states, cancellation, double submission, Settings, axe, switching to Spanish (`<html lang>` and remembered choice), the full flow in Spanish, and identical keys in the `es` and `en` catalogs |
+| `presentation/App.test.tsx` | Full flows (English by default), five states, cancellation, double submission, Settings, axe, the lesion markers (the **Show markers** switch hides them; the list of areas in words stays), the probability bar, switching to Spanish (`<html lang>` and remembered choice), the full flow in Spanish, and identical keys in the `es` and `en` catalogs |
 
 ## Deployment
 
@@ -79,5 +79,9 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 | UI text | Add the key to `Messages` in `src/presentation/i18n/messages.ts`, then the text in **both** `en.ts` and `es.ts`. The typecheck fails if a catalog is missing it, and the key test fails if the catalogs differ |
 | A new language | Add it to `Locale` and `LOCALES` in `messages.ts`, create its catalog, register it in `CATALOG` (`I18nProvider.tsx`) and give it its own name in `LanguageSwitcher.tsx` |
 | A new server field | `src/domain/triage.ts` (type), `src/infrastructure/mcp/resultMapping.ts` (schema and mapping) and the matching view |
-| A new error | `FailureKind` in `application/errors.ts`, its text in `failures` in both catalogs, its fix in `FAILURE_FIX` (`messages.ts`) and the mapping in `resultMapping.ts` or `mcpTriageGateway.ts` |
-| Colors or spacing | Only in `tokens.css`, in the semantic layer |
+| A new error | `FailureKind` in `application/errors.ts`, its text in `failures` in both catalogs, its fix in `FAILURE_FIX` (`messages.ts`), whether it is retryable (`RETRYABLE` in `errors.ts`) and where it is raised (`resultMapping.ts`, `mcpTriageGateway.ts` or `lazyTriageGateway.ts`) |
+| Colors, type sizes, spacing, radii or shadows | Only in `src/presentation/styles/tokens.css`. Components use the semantic layer; a new color is a primitive plus a semantic token, redefined for the dark theme if needed |
+| Layout or breakpoints (480 / 720 / 1024 px) | `src/presentation/styles/app.css`, mobile-first: base styles for phones, then one `@media (min-width: …)` block per breakpoint at the end of the file. The result page order uses `grid-template-areas` |
+| The heatmap viewer and its markers | `src/presentation/components/LesionViewer.tsx`; texts `regionsTitle`, `region`, `regionsNote`, `noRegions` and `showMarkers` in both catalogs |
+| The probability chart | `src/presentation/components/Probabilities.tsx` (bar and legend) and the `--color-group-*` tokens |
+| The image pickers | `src/presentation/components/ImagePicker.tsx` (`tiles` or `compact` variant) |

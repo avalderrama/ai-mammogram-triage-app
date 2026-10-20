@@ -81,6 +81,10 @@ export const en: Messages = {
       body: () => 'The server configuration does not accept this address. The pilot administrator must add it to '
         + 'MAMMO_ALLOWED_HOSTS (and this app’s address to MAMMO_ALLOWED_ORIGINS).',
     },
+    app_outdated: {
+      title: 'A new version of the app is available',
+      body: () => 'Reload the page to use it. Your settings are kept; choose the image again after reloading.',
+    },
     server_busy: {
       title: 'The server is busy',
       body: () => 'This is temporary: it is analyzing other images. Try again in a few seconds.',
@@ -111,11 +115,17 @@ export const en: Messages = {
       body: () => 'Try again. If it keeps happening, share the reference code with the pilot administrator.',
     },
   },
+  reload: 'Reload the page',
   failurePanel: {
     reviewedPanels: (n) => `Views checked: ${n}. None was recognized as a mammogram.`,
     reference: 'Reference code:',
   },
-  picker: { takePhoto: 'Take photo', choosePhoto: 'Choose saved image' },
+  picker: {
+    takePhoto: 'Take photo',
+    choosePhoto: 'Choose saved image',
+    takePhotoHint: 'Use the phone camera on a screen or film',
+    choosePhotoHint: 'A photo, screenshot or exported file',
+  },
   home: {
     docTitle: 'Home',
     title: 'Indicative mammogram triage',
@@ -124,6 +134,13 @@ export const en: Messages = {
     beforeStartTitle: 'Before you start',
     beforeStartBody: 'Set the server address and the access key in',
     settingsLink: 'Settings',
+    eyebrow: 'Research pilot',
+    howTitle: 'How it works',
+    howSteps: [
+      { title: 'Photograph', body: 'Take a photo of the mammogram or choose a saved image.' },
+      { title: 'Protect', body: 'Personal data on the image is covered before the analysis.' },
+      { title: 'Prioritize', body: 'Get a priority level per breast and see where the model looks.' },
+    ],
     tipsTitle: 'How to take a good photo',
     tips: [
       'Frame a single mammogram, or the views you want to compare, without the rest of the screen.',
@@ -202,6 +219,14 @@ export const en: Messages = {
       : 'it was not generated for this view.'}`,
     heatmapAlt: (name) => `Heatmap of ${name}: the red areas drew the model’s attention the most.`,
     heatmapCaption: (name) => `${name}. In red, the areas that drew the model’s attention the most.`,
+    regionsTitle: 'Where the model looks',
+    regionsNote: 'Numbered boxes mark the most suspicious areas, strongest first. They guide the reading; they are not '
+      + 'an outline of a lesion.',
+    showMarkers: 'Show markers',
+    region: (n, depth, vertical) => `Area ${n}: ${({ posterior: 'posterior third (near the chest wall)', middle: 'middle third',
+      anterior: 'anterior third (near the nipple)' })[depth]}, ${vertical} part of the breast`,
+    noRegions: 'No single area stands out clearly in this view.',
+    summaryNextStep: 'Read this study with the radiologist’s usual workflow; this result only helps decide the order.',
   },
   settings: {
     docTitle: 'Settings',

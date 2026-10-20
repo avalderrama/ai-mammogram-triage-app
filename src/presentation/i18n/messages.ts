@@ -1,6 +1,6 @@
 /** Shape of every UI string. Each locale implements it fully, so a missing translation is a type error. */
 import type { FailureKind } from '../../application/errors';
-import type { BreastSide, QualityIssue, TriageLevel, ViewType } from '../../domain/triage';
+import type { BreastSide, QualityIssue, SuspiciousRegion, TriageLevel, ViewType } from '../../domain/triage';
 
 export type Locale = 'en' | 'es';
 export const LOCALES: readonly Locale[] = ['en', 'es'];
@@ -28,11 +28,17 @@ export interface Messages {
   readonly views: Record<ViewType, string>;
   readonly breastTitle: (side: BreastSide, panel: string) => string;
   readonly failures: Record<FailureKind, { readonly title: string; readonly body: (retryAfterSeconds?: number) => string }>;
+  readonly reload: string;
   readonly failurePanel: {
     readonly reviewedPanels: (count: number) => string;
     readonly reference: string;
   };
-  readonly picker: { readonly takePhoto: string; readonly choosePhoto: string };
+  readonly picker: {
+    readonly takePhoto: string;
+    readonly choosePhoto: string;
+    readonly takePhotoHint: string;
+    readonly choosePhotoHint: string;
+  };
   readonly home: {
     readonly docTitle: string;
     readonly title: string;
@@ -40,6 +46,9 @@ export interface Messages {
     readonly beforeStartTitle: string;
     readonly beforeStartBody: string;
     readonly settingsLink: string;
+    readonly eyebrow: string;
+    readonly howTitle: string;
+    readonly howSteps: readonly { readonly title: string; readonly body: string }[];
     readonly tipsTitle: string;
     readonly tips: readonly string[];
     readonly privacy: string;
@@ -106,6 +115,12 @@ export interface Messages {
     readonly heatmapUnavailable: (name: string, lowResolution: boolean) => string;
     readonly heatmapAlt: (name: string) => string;
     readonly heatmapCaption: (name: string) => string;
+    readonly regionsTitle: string;
+    readonly regionsNote: string;
+    readonly showMarkers: string;
+    readonly region: (n: number, depth: SuspiciousRegion['depth'], vertical: SuspiciousRegion['vertical']) => string;
+    readonly noRegions: string;
+    readonly summaryNextStep: string;
   };
   readonly settings: {
     readonly docTitle: string;
@@ -139,7 +154,7 @@ export interface Messages {
 }
 
 /** Where the user can fix each failure (language-independent). */
-export const FAILURE_FIX: Record<FailureKind, 'settings' | 'image' | 'retry'> = {
+export const FAILURE_FIX: Record<FailureKind, 'settings' | 'image' | 'retry' | 'reload'> = {
   not_configured: 'settings',
   not_an_image: 'image',
   not_a_mammogram: 'image',
@@ -149,6 +164,7 @@ export const FAILURE_FIX: Record<FailureKind, 'settings' | 'image' | 'retry'> = 
   unauthorized: 'settings',
   server_misconfigured: 'settings',
   server_busy: 'retry',
+  app_outdated: 'reload',
   rate_limited: 'retry',
   offline: 'retry',
   server_unreachable: 'retry',

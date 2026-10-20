@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import type { Outcome } from '../../application/analyzeMammogram';
-import {
-  breastsByUrgency, isPartial, studyQualityIssues, type Analysis, type BiradsProbabilities, type BreastResult,
-  type ViewResult,
-} from '../../domain/triage';
+import { breastsByUrgency, isPartial, studyQualityIssues, type Analysis, type BreastResult } from '../../domain/triage';
 import { Banner, Disclaimer, FailurePanel, LevelBadge } from '../components/Feedback';
+import { LesionViewer } from '../components/LesionViewer';
+import { Probabilities } from '../components/Probabilities';
 import { useViewHeading } from '../hooks';
 import { useI18n } from '../i18n/I18nProvider';
 import { FAILURE_FIX } from '../i18n/messages';
@@ -80,31 +79,38 @@ function AnalysisResult({ heading, analysis, onNewImage }:
   return (
     <>
       {heading}
-      <section className="summary" aria-labelledby="summary-title" role="status">
-        <h2 id="summary-title" className="visually-hidden">{r.overall}</h2>
-        <p className="summary__label">{r.overall}</p>
-        <LevelBadge level={analysis.overallLevel} large />
-        <p>{t.levels[analysis.overallLevel].explanation}</p>
-      </section>
-      <Disclaimer />
-      {isPartial(analysis) && (
-        <Banner tone="warning" title={r.partialTitle}>
-          {analysis.rejectedPanels.length > 0 && <p>{r.rejectedPanels(analysis.rejectedPanels.map((p) => p.panel))}</p>}
-          {analysis.breasts.some((b) => b.scoringMode === 'global_only') && <p>{r.globalOnly}</p>}
-        </Banner>
-      )}
-      {issues.length > 0 && (
-        <Banner tone="warning" title={r.qualityTitle}>
-          <ul className="list">
-            {issues.map((q) => <li key={q}><strong>{t.quality[q].problem}</strong> {t.quality[q].action}</li>)}
-          </ul>
-        </Banner>
-      )}
-      {breastsByUrgency(analysis).map((b) => <BreastCard key={b.label} breast={b} />)}
-      <p className="text-secondary">{r.masked(analysis.maskedTextRegions)} {r.modelVersion(analysis.modelVersion)}</p>
-      <div className="actions">
-        <button type="button" className="button button--primary" onClick={onNewImage}>{r.analyzeAnother}</button>
-        <a className="button button--secondary" href={ROUTES.review}>{r.backToImage}</a>
+      <div className="result-layout">
+        <aside className="result-layout__aside">
+          <section className={`summary summary--${analysis.overallLevel}`} aria-labelledby="summary-title" role="status">
+            <h2 id="summary-title" className="eyebrow">{r.overall}</h2>
+            <LevelBadge level={analysis.overallLevel} large />
+            <p>{t.levels[analysis.overallLevel].explanation}</p>
+            <p className="note">{r.summaryNextStep}</p>
+          </section>
+          <Disclaimer />
+          <p className="note">{r.masked(analysis.maskedTextRegions)} {r.modelVersion(analysis.modelVersion)}</p>
+        </aside>
+        <div className="result-layout__main">
+          {isPartial(analysis) && (
+            <Banner tone="warning" title={r.partialTitle}>
+              {analysis.rejectedPanels.length > 0 && <p>{r.rejectedPanels(analysis.rejectedPanels.map((p) => p.panel))}</p>}
+              {analysis.breasts.some((b) => b.scoringMode === 'global_only') && <p>{r.globalOnly}</p>}
+            </Banner>
+          )}
+          {issues.length > 0 && (
+            <Banner tone="warning" title={r.qualityTitle}>
+              <ul className="list">
+                {issues.map((q) => <li key={q}><strong>{t.quality[q].problem}</strong> {t.quality[q].action}</li>)}
+              </ul>
+            </Banner>
+          )}
+          {breastsByUrgency(analysis).map((b) => <BreastCard key={b.label} breast={b} />)}
+        </div>
+        {/* After the details on phones; under the summary on wide screens (reading order = DOM order on phones). */}
+        <div className="result-layout__actions actions actions--stacked">
+          <button type="button" className="button button--primary" onClick={onNewImage}>{r.analyzeAnother}</button>
+          <a className="button button--secondary" href={ROUTES.review}>{r.backToImage}</a>
+        </div>
       </div>
     </>
   );
@@ -114,54 +120,16 @@ function BreastCard({ breast }: { breast: BreastResult }) {
   const { t } = useI18n();
   const id = `breast-${breast.label.replace(/\W+/g, '-')}`;
   return (
-    <article className="card" aria-labelledby={id}>
-      <div className="card__header">
+    <article className={`card breast breast--${breast.level}`} aria-labelledby={id}>
+      <header className="breast__header">
         <h2 id={id}>{t.breastTitle(breast.side, breast.label)}</h2>
         <LevelBadge level={breast.level} />
-      </div>
+      </header>
       <p>{t.levels[breast.level].explanation}</p>
       <Probabilities probabilities={breast.probabilities} />
-      {breast.views.map((v) => <ViewHeatmap key={v.panel} view={v} />)}
+      <div className="breast__views">
+        {breast.views.map((v) => <LesionViewer key={v.panel} view={v} />)}
+      </div>
     </article>
-  );
-}
-
-function Probabilities({ probabilities }: { probabilities: BiradsProbabilities }) {
-  const { t } = useI18n();
-  const g = t.result.groups;
-  const rows: [string, number][] = [
-    [g.routine, probabilities.routine],
-    [g.shortFollowUp, probabilities.shortFollowUp],
-    [g.biopsy, probabilities.biopsy],
-  ];
-  return (
-    <dl className="probabilities" aria-label={t.result.probabilitiesLabel}>
-      {rows.map(([label, value]) => (
-        <div key={label} className="probabilities__row">
-          <dt>{label}</dt>
-          <dd>
-            <span className="probabilities__value">{t.percent(value)}</span>
-            {/* CSS width needs "45%" without the locale's space, so it is not built with the formatter. */}
-            <span className="meter" aria-hidden="true"><span className="meter__fill" style={{ inlineSize: `${Math.round(value * 100)}%` }} /></span>
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function ViewHeatmap({ view }: { view: ViewResult }) {
-  const { t } = useI18n();
-  const name = t.result.viewName(view.side, view.panel, view.view);
-  if (!view.heatmap) {
-    const lowResolution = view.heatmapUnavailableReason?.startsWith('low_resolution') ?? false;
-    return <p className="text-secondary">{t.result.heatmapUnavailable(name, lowResolution)}</p>;
-  }
-  return (
-    <figure className="heatmap">
-      <img src={view.heatmap.url} width={view.heatmap.width} height={view.heatmap.height} loading="lazy"
-        alt={t.result.heatmapAlt(name)} />
-      <figcaption className="text-secondary">{t.result.heatmapCaption(name)}</figcaption>
-    </figure>
   );
 }

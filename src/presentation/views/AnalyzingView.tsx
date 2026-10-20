@@ -15,7 +15,8 @@ export function AnalyzingView({ step, startedAt, onCancel }:
   const current = STEPS.indexOf(step);
   const label = (s: AnalysisStep) => (s === 'preparing' ? a.stepPreparing : a.stepAnalyzing);
   return (
-    <>
+    <section className="card analyzing">
+      <div className="scan" aria-hidden="true"><Icon name="image" size="xl" /></div>
       <h1 ref={heading} tabIndex={-1}>{a.title}</h1>
       <p className="lead">{a.lead}</p>
       <ol className="steps" aria-label={a.stepsLabel}>
@@ -35,9 +36,9 @@ export function AnalyzingView({ step, startedAt, onCancel }:
       <div className="progress" aria-hidden="true"><div className="progress__bar" /></div>
       <p role="status" className="visually-hidden">{label(step)}</p>
       <p className="text-secondary">{a.elapsed(seconds)}</p>
-      <div className="actions">
+      <div className="actions actions--center">
         <button type="button" className="button button--secondary" onClick={onCancel}>{a.cancel}</button>
       </div>
-    </>
+    </section>
   );
 }

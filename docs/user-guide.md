@@ -53,15 +53,34 @@ same selector.
 
 You will also see:
 
-- **Estimated probability per BI-RADS group** (1-2, 3 and 4-5). It is the model's estimate for comparison, not an
-  exact clinical probability.
+- **Estimated probability per BI-RADS group** (1-2, 3 and 4-5), as a colored bar and as a list with the exact
+  percentages. It is the model's estimate for comparison, not an exact clinical probability.
 - **Heatmap:** in red, the areas that drew the model's attention the most. If it does not appear, the app explains
-  why; it is almost always low resolution.
+  why; it is almost always low resolution (the image needs at least 1500 px of height).
+- **Marked areas** on the heatmap (see below).
 - **Quality warnings**, with what to do: move closer, focus, remove glare or crop.
 - **Partial result:** some view did not look like a mammogram, or only the general model could be used.
 - How many **text areas were covered** (possible personal data) before the analysis.
 
-When you are done, tap **Analyze another image** (drops the image and the result) or **Back to the image**.
+When you are done, tap **Analyze another image** (drops the image and the result) or **Back to the image**. On a
+phone these buttons are at the end of the result; on a wide screen they are under the overall result.
+
+### Marked areas: where the model looks
+
+On each heatmap, up to **three numbered boxes** mark the areas the model found most suspicious. Box **1** is the
+strongest. Under the image, the box **Where the model looks** says where each one is in words, for example "Area 1:
+anterior third (near the nipple), upper part of the breast".
+
+- **Depth** goes from the chest wall to the nipple: *posterior third* (near the chest wall), *middle third* or
+  *anterior third* (near the nipple). In the image the chest wall is on the left.
+- **Upper, middle or lower** is the third of the breast's height in this view, as it appears in the image. It is not
+  a clock position or a quadrant.
+- Untick **Show markers** to see the heatmap without the boxes. The list in words stays.
+- If the app says "No single area stands out clearly in this view", the model did not find any area that stands out.
+- Without a heatmap (low resolution) there are no marked areas either.
+
+The boxes guide your reading; they are **not the outline of a lesion**. A box covers a whole window that the model
+scanned, the model can mark normal tissue, and a finding can lie outside every box. Read the whole image as usual.
 
 ### Expected performance (on good-resolution files)
 
@@ -86,6 +105,7 @@ administrator.
 | The server could not be reached | It may be off, or its address changed. Ask for the new address |
 | The server is busy / Too many requests in a row | Wait a few seconds and tap **Try again** |
 | No internet connection | Connect to a network. Your image is still selected |
+| A new version of the app is available | Tap **Reload the page**. Your settings are kept; choose the image again after reloading |
 
 ## 6. Privacy
 

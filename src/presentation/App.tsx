@@ -143,7 +143,10 @@ export function App({ services }: { services: AppServices }) {
       }}>{t.app.skipLink}</a>
       <header className="header">
         <div className="header__inner">
-          <a className="header__brand" href={ROUTES.home}>{t.app.name} <span className="tag">{t.app.tag}</span></a>
+          <a className="header__brand" href={ROUTES.home}>
+            <img className="header__logo" src="./icon.svg" alt="" width="32" height="32" />
+            <span>{t.app.name}</span> <span className="tag">{t.app.tag}</span>
+          </a>
           <div className="header__end">
             <nav aria-label={t.app.navLabel}>
               <ul className="nav">

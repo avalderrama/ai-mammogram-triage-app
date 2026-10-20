@@ -1,48 +1,66 @@
 /* Design tokens (UX-VIS-001/002). Components only use the semantic layer. */
 :root {
   /* Primitives */
+  --indigo-900: #1e1b4b;
+  --indigo-700: #3730a3;
+  --blue-800: #163a8a;
   --blue-700: #1747a8;
   --blue-600: #1d5bd8;
-  --blue-300: #7aa7ff;
-  --blue-50: #e8effc;
+  --blue-300: #8ab4ff;
+  --blue-100: #dbe7ff;
+  --blue-50: #eef3ff;
   --red-700: #b42318;
-  --red-300: #ff8a80;
-  --red-50: #fdecea;
+  --red-300: #ff9b8f;
+  --red-100: #fde3df;
+  --red-50: #fef1ef;
   --amber-800: #7a4a00;
+  --amber-500: #d48806;
   --amber-300: #ffc266;
-  --amber-50: #fff4e0;
+  --amber-50: #fff6e5;
   --green-700: #136c3a;
+  --green-500: #1f9d55;
   --green-300: #6fdc9b;
-  --green-50: #e7f5ec;
-  --gray-950: #12151a;
-  --gray-900: #1b1f24;
-  --gray-850: #1b2027;
-  --gray-700: #4a5361;
-  --gray-500: #6b7585;
-  --gray-450: #7b8494;
-  --gray-300: #b4bcc8;
-  --gray-100: #eceff3;
-  --gray-50: #f7f8fa;
+  --green-50: #e9f7ef;
+  --cyan-400: #22d3ee;
+  --slate-950: #0b1020;
+  --slate-900: #151a2b;
+  --slate-850: #1b2235;
+  --slate-800: #232b42;
+  --slate-700: #475069;
+  --slate-500: #6b7489;
+  --slate-450: #7b8396;
+  --slate-300: #b6bdcc;
+  --slate-200: #dfe3eb;
+  --slate-100: #edf0f5;
+  --slate-50: #f6f8fb;
   --white: #ffffff;
 
   /* Semantic: surfaces and text */
-  --color-bg: var(--gray-50);
+  --color-bg: var(--slate-50);
   --color-surface: var(--white);
-  --color-surface-muted: var(--gray-100);
-  --color-text-primary: var(--gray-900);
-  --color-text-secondary: var(--gray-700);
-  --color-border: var(--gray-450);
-  --color-border-subtle: var(--gray-100);
+  --color-surface-muted: var(--slate-100);
+  --color-surface-sunken: var(--slate-950);
+  --color-text-primary: var(--slate-900);
+  --color-text-secondary: var(--slate-700);
+  --color-text-on-dark: var(--white);
+  --color-border: var(--slate-450);
+  --color-border-subtle: var(--slate-200);
 
-  /* Semantic: action and focus */
+  /* Semantic: action, accent and focus */
   --color-action: var(--blue-600);
   --color-action-hover: var(--blue-700);
   --color-on-action: var(--white);
+  --color-action-soft: var(--blue-50);
+  --color-accent-soft: var(--blue-100);
   --color-focus: var(--blue-600);
+  --gradient-hero: linear-gradient(135deg, var(--blue-700) 0%, var(--indigo-700) 100%);
+  --color-on-hero: var(--white);
+  --color-on-hero-soft: var(--blue-100);
 
   /* Semantic: feedback */
   --color-feedback-danger: var(--red-700);
   --color-feedback-danger-bg: var(--red-50);
+  --color-feedback-danger-strong-bg: var(--red-100);
   --color-feedback-warning: var(--amber-800);
   --color-feedback-warning-bg: var(--amber-50);
   --color-feedback-success: var(--green-700);
@@ -50,69 +68,101 @@
   --color-feedback-info: var(--blue-700);
   --color-feedback-info-bg: var(--blue-50);
 
+  /* Data: BI-RADS groups (always paired with a text legend). Blue / amber / red stay distinguishable with the
+     common color-vision deficiencies (UX-DAT-009). Accent justification (UX-VIS-011): the lesion marker is cyan
+     because it is the one hue that stands out on both a grayscale mammogram and the red heatmap. */
+  --color-group-routine: var(--blue-600);
+  --color-group-follow-up: var(--amber-500);
+  --color-group-biopsy: var(--red-700);
+  --color-marker: var(--cyan-400);
+  --color-on-marker: var(--slate-950);
+
   /* Spacing, base 4 px (UX-VIS-003) */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+  --space-10: 2.5rem;
   --space-12: 3rem;
 
-  /* Typography: 5 sizes, ratio 1.25 (UX-VIS-006/010) */
-  --font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Typography (UX-VIS-006/010): modular scale, ratio 1.25 from the 1 rem body (1 · 1.25 · 1.563 · 1.953 ·
+     2.441), plus 0.875 rem for secondary/help text as the design rules' type table prescribes (14 px). */
+  --font-family: "Segoe UI Variable", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-md: 1.25rem;
-  --font-size-lg: 1.5rem;
-  --font-size-xl: 2rem;
-  --line-height-body: 1.5;
-  --line-height-heading: 1.25;
+  --font-size-lg: 1.563rem;
+  --font-size-xl: 1.953rem;
+  --font-size-2xl: 2.441rem;
+  --line-height-body: 1.55;
+  --line-height-heading: 1.2;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
-  --font-weight-bold: 600;
+  --font-weight-bold: 650;
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-caps: 0.08em;
 
-  /* Shape, elevation, motion */
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  /* Shape, elevation, motion (UX-VIS-019) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
   --border-width: 1px;
   --border-width-strong: 2px;
+  --marker-width: 3px;
   --focus-ring-width: 3px;
-  --shadow-card: 0 1px 3px rgb(0 0 0 / 12%);
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 6%), 0 4px 16px rgb(15 23 42 / 6%);
+  --shadow-raised: 0 2px 4px rgb(15 23 42 / 8%), 0 12px 32px rgb(15 23 42 / 12%);
+  --shadow-action: 0 4px 14px rgb(29 91 216 / 35%);
   --duration-fast: 150ms;
   --duration-base: 250ms;
   --easing-standard: cubic-bezier(0.2, 0, 0, 1);
 
   /* Layout */
   --target-min: 44px;
-  --content-max: 40rem;
+  --content-max: 72rem;
   --measure: 65ch;
+  --header-height: 4rem;
   --icon-size: 1.25rem;
   --icon-size-lg: 1.75rem;
+  --icon-size-xl: 2.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: var(--gray-950);
-    --color-surface: var(--gray-850);
-    --color-surface-muted: var(--gray-950);
-    --color-text-primary: var(--gray-100);
-    --color-text-secondary: var(--gray-300);
-    --color-border: var(--gray-500);
-    --color-border-subtle: var(--gray-700);
+    --color-bg: var(--slate-950);
+    --color-surface: var(--slate-850);
+    --color-surface-muted: var(--slate-800);
+    --color-surface-sunken: #05070d;
+    --color-text-primary: var(--slate-100);
+    --color-text-secondary: var(--slate-300);
+    --color-border: var(--slate-500);
+    --color-border-subtle: var(--slate-800);
     --color-action: var(--blue-300);
-    --color-action-hover: var(--blue-50);
-    --color-on-action: var(--gray-950);
+    --color-action-hover: var(--blue-100);
+    --color-on-action: var(--slate-950);
+    --color-action-soft: #1a2647;
+    --color-accent-soft: #22305a;
     --color-focus: var(--blue-300);
+    --gradient-hero: linear-gradient(135deg, var(--blue-800) 0%, var(--indigo-900) 100%);
     --color-feedback-danger: var(--red-300);
     --color-feedback-danger-bg: #3a1d1b;
+    --color-feedback-danger-strong-bg: #4a2220;
     --color-feedback-warning: var(--amber-300);
     --color-feedback-warning-bg: #3a2c12;
     --color-feedback-success: var(--green-300);
     --color-feedback-success-bg: #15301f;
     --color-feedback-info: var(--blue-300);
     --color-feedback-info-bg: #18233a;
-    --shadow-card: 0 1px 3px rgb(0 0 0 / 40%);
+    --color-group-routine: var(--blue-300);
+    --color-group-follow-up: var(--amber-300);
+    --color-group-biopsy: var(--red-300);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 40%), 0 4px 16px rgb(0 0 0 / 30%);
+    --shadow-raised: 0 2px 4px rgb(0 0 0 / 40%), 0 12px 32px rgb(0 0 0 / 45%);
+    --shadow-action: 0 4px 14px rgb(0 0 0 / 40%);
   }
 }

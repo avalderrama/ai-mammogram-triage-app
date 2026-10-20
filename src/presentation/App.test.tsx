@@ -67,6 +67,24 @@ describe('App (English by default)', () => {
     await expectNoSeriousA11yViolations();
   });
 
+  it('marks and describes where the model found the most suspicious area', async () => {
+    const user = userEvent.setup();
+    renderApp({ ok: true, analysis: analysis() });
+    await pickAndAnalyze(user);
+    expect(await screen.findByText('Where the model looks')).toBeInTheDocument();
+    expect(screen.getByText('Area 1: middle third, lower part of the breast')).toBeInTheDocument();
+    expect(document.querySelectorAll('.marker')).toHaveLength(1);
+    await user.click(screen.getByLabelText('Show markers'));
+    expect(document.querySelectorAll('.marker')).toHaveLength(0);
+    expect(screen.getByText('Area 1: middle third, lower part of the breast')).toBeInTheDocument();
+  });
+
+  it('names each breast card by its heading, even for "panel N" labels', async () => {
+    renderApp({ ok: true, analysis: analysis({ breasts: [breast({ label: 'panel 1', side: 'unknown' })] }) });
+    await pickAndAnalyze();
+    expect(await screen.findByRole('article', { name: 'Image (view 1)' })).toBeInTheDocument();
+  });
+
   it('explains a missing heatmap and marks the result as partial', async () => {
     renderApp({ ok: true, analysis: analysis({
       breasts: [breast({ scoringMode: 'global_only', views: [{ ...breast().views[0]!, heatmap: null,
@@ -133,7 +151,7 @@ describe('App (English by default)', () => {
     renderApp({ ok: true, analysis: analysis({ breasts: [breast({ probabilities: { routine: 0.45, shortFollowUp: 0.03, biopsy: 0.52 } })] }) });
     await pickAndAnalyze();
     await screen.findByRole('heading', { level: 1, name: 'Triage result' });
-    const widths = [...document.querySelectorAll<HTMLElement>('.meter__fill')].map((el) => el.style.inlineSize);
+    const widths = [...document.querySelectorAll<HTMLElement>('.stack-bar__segment')].map((el) => el.style.inlineSize);
     expect(widths).toEqual(['45%', '3%', '52%']);
   });
 
