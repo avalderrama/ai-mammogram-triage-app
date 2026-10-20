@@ -1,43 +1,42 @@
 import type { AnalysisStep } from '../../application/analyzeMammogram';
 import { Icon } from '../components/Icon';
 import { useElapsedSeconds, useViewHeading } from '../hooks';
+import { useI18n } from '../i18n/I18nProvider';
 
-const STEPS: { id: AnalysisStep | 'done'; label: string }[] = [
-  { id: 'preparing', label: 'Preparar la imagen en este dispositivo' },
-  { id: 'analyzing', label: 'Tapar datos personales, comprobar que sea una mamografía y analizar cada mama' },
-];
+const STEPS: readonly AnalysisStep[] = ['preparing', 'analyzing'];
 
 /** Long wait (> 5 s): real steps, elapsed time and a way to cancel (UX-EST-001, UX-PRN-005). */
 export function AnalyzingView({ step, startedAt, onCancel }:
   { step: AnalysisStep; startedAt: number; onCancel: () => void }) {
-  const heading = useViewHeading<HTMLHeadingElement>('Analizando');
+  const { t } = useI18n();
+  const a = t.analyzing;
+  const heading = useViewHeading<HTMLHeadingElement>(a.docTitle);
   const seconds = useElapsedSeconds(startedAt);
-  const current = STEPS.findIndex((s) => s.id === step);
+  const current = STEPS.indexOf(step);
+  const label = (s: AnalysisStep) => (s === 'preparing' ? a.stepPreparing : a.stepAnalyzing);
   return (
     <>
-      <h1 ref={heading} tabIndex={-1}>Analizando la imagen</h1>
-      <p className="lead">Suele tardar entre 5 y 30 segundos. Puedes cancelar en cualquier momento.</p>
-      <ol className="steps" aria-label="Pasos del análisis">
+      <h1 ref={heading} tabIndex={-1}>{a.title}</h1>
+      <p className="lead">{a.lead}</p>
+      <ol className="steps" aria-label={a.stepsLabel}>
         {STEPS.map((s, i) => {
           const state = i < current ? 'done' : i === current ? 'current' : 'pending';
           return (
-            <li key={s.id} className={`steps__item steps__item--${state}`} aria-current={state === 'current' ? 'step' : undefined}>
+            <li key={s} className={`steps__item steps__item--${state}`} aria-current={state === 'current' ? 'step' : undefined}>
               <Icon name={state === 'done' ? 'check' : state === 'current' ? 'clock' : 'circle'} />
               <span>
-                {s.label}
-                <span className="visually-hidden">
-                  {state === 'done' ? ' (completado)' : state === 'current' ? ' (en curso)' : ' (pendiente)'}
-                </span>
+                {label(s)}
+                <span className="visually-hidden">{state === 'done' ? a.done : state === 'current' ? a.current : a.pending}</span>
               </span>
             </li>
           );
         })}
       </ol>
       <div className="progress" aria-hidden="true"><div className="progress__bar" /></div>
-      <p role="status" className="visually-hidden">{STEPS[current]?.label}</p>
-      <p className="text-secondary">Tiempo transcurrido: {seconds} s</p>
+      <p role="status" className="visually-hidden">{label(step)}</p>
+      <p className="text-secondary">{a.elapsed(seconds)}</p>
       <div className="actions">
-        <button type="button" className="button button--secondary" onClick={onCancel}>Cancelar análisis</button>
+        <button type="button" className="button button--secondary" onClick={onCancel}>{a.cancel}</button>
       </div>
     </>
   );

@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "description": "Test PWA that photographs a mammogram and asks the mammogram triage MCP server for a priority level.",
   "scripts": {
     "dev": "vite",

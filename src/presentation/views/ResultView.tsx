@@ -4,9 +4,10 @@ import {
   breastsByUrgency, isPartial, studyQualityIssues, type Analysis, type BiradsProbabilities, type BreastResult,
   type ViewResult,
 } from '../../domain/triage';
-import { breastTitle, FAILURE_COPY, LEVEL_COPY, percent, QUALITY_COPY, SIDE_COPY, VIEW_COPY } from '../copy';
 import { Banner, Disclaimer, FailurePanel, LevelBadge } from '../components/Feedback';
 import { useViewHeading } from '../hooks';
+import { useI18n } from '../i18n/I18nProvider';
+import { FAILURE_FIX } from '../i18n/messages';
 import { ROUTES } from '../routing';
 
 interface Props {
@@ -18,14 +19,16 @@ interface Props {
 
 /** Five states (UX-EST-000): loading, empty, error, partial and with data. */
 export function ResultView({ outcome, running, onRetry, onNewImage }: Props) {
-  const heading = useViewHeading<HTMLHeadingElement>('Resultado');
-  const title = <h1 ref={heading} tabIndex={-1}>Resultado del triaje</h1>;
+  const { t } = useI18n();
+  const r = t.result;
+  const heading = useViewHeading<HTMLHeadingElement>(r.docTitle);
+  const title = <h1 ref={heading} tabIndex={-1}>{r.title}</h1>;
 
   if (running) {
     return (
       <>
         {title}
-        <div className="skeleton" role="status" aria-label="Cargando el resultado">
+        <div className="skeleton" role="status" aria-label={r.loading}>
           <div className="skeleton__line skeleton__line--wide" />
           <div className="skeleton__block" />
           <div className="skeleton__block" />
@@ -38,28 +41,28 @@ export function ResultView({ outcome, running, onRetry, onNewImage }: Props) {
       <>
         {title}
         <section className="empty" aria-labelledby="empty-title">
-          <h2 id="empty-title">Todavía no hay ningún resultado</h2>
-          <p>Los resultados no se guardan: solo ves el último análisis mientras la app está abierta.</p>
+          <h2 id="empty-title">{r.emptyTitle}</h2>
+          <p>{r.emptyBody}</p>
           <div className="actions">
-            <button type="button" className="button button--primary" onClick={onNewImage}>Elegir una imagen</button>
+            <button type="button" className="button button--primary" onClick={onNewImage}>{r.pickImage}</button>
           </div>
         </section>
       </>
     );
   }
   if (!outcome.ok) {
-    const fix = FAILURE_COPY[outcome.failure.kind].fix;
+    const fix = FAILURE_FIX[outcome.failure.kind];
     return (
       <>
         {title}
         <FailurePanel failure={outcome.failure} actions={
           <>
             {outcome.failure.retryable && (
-              <button type="button" className="button button--primary" onClick={onRetry}>Volver a intentarlo</button>
+              <button type="button" className="button button--primary" onClick={onRetry}>{r.retry}</button>
             )}
-            {fix === 'settings' && <a className="button button--primary" href={ROUTES.settings}>Ir a Ajustes</a>}
+            {fix === 'settings' && <a className="button button--primary" href={ROUTES.settings}>{r.goToSettings}</a>}
             <button type="button" className={`button ${fix === 'image' ? 'button--primary' : 'button--secondary'}`}
-              onClick={onNewImage}>Elegir otra imagen</button>
+              onClick={onNewImage}>{r.pickOther}</button>
           </>
         } />
         <Disclaimer />
@@ -71,60 +74,52 @@ export function ResultView({ outcome, running, onRetry, onNewImage }: Props) {
 
 function AnalysisResult({ heading, analysis, onNewImage }:
   { heading: ReactNode; analysis: Analysis; onNewImage: () => void }) {
+  const { t } = useI18n();
+  const r = t.result;
   const issues = studyQualityIssues(analysis);
   return (
     <>
       {heading}
       <section className="summary" aria-labelledby="summary-title" role="status">
-        <h2 id="summary-title" className="visually-hidden">Resultado general</h2>
-        <p className="summary__label">Resultado general</p>
+        <h2 id="summary-title" className="visually-hidden">{r.overall}</h2>
+        <p className="summary__label">{r.overall}</p>
         <LevelBadge level={analysis.overallLevel} large />
-        <p>{LEVEL_COPY[analysis.overallLevel].explanation}</p>
+        <p>{t.levels[analysis.overallLevel].explanation}</p>
       </section>
       <Disclaimer />
       {isPartial(analysis) && (
-        <Banner tone="warning" title="Resultado parcial">
-          {analysis.rejectedPanels.length > 0 && (
-            <p>No se analizaron {analysis.rejectedPanels.length === 1 ? 'la vista' : 'las vistas'}{' '}
-              {analysis.rejectedPanels.map((r) => r.panel).join(', ')} porque no parecen mamografías.</p>
-          )}
-          {analysis.breasts.some((b) => b.scoringMode === 'global_only') && (
-            <p>La resolución no alcanza para el análisis detallado ni el mapa de calor en algunas vistas: se usó solo el
-              modelo general.</p>
-          )}
+        <Banner tone="warning" title={r.partialTitle}>
+          {analysis.rejectedPanels.length > 0 && <p>{r.rejectedPanels(analysis.rejectedPanels.map((p) => p.panel))}</p>}
+          {analysis.breasts.some((b) => b.scoringMode === 'global_only') && <p>{r.globalOnly}</p>}
         </Banner>
       )}
       {issues.length > 0 && (
-        <Banner tone="warning" title="Mejora la foto para un resultado más fiable">
+        <Banner tone="warning" title={r.qualityTitle}>
           <ul className="list">
-            {issues.map((q) => <li key={q}><strong>{QUALITY_COPY[q].problem}</strong> {QUALITY_COPY[q].action}</li>)}
+            {issues.map((q) => <li key={q}><strong>{t.quality[q].problem}</strong> {t.quality[q].action}</li>)}
           </ul>
         </Banner>
       )}
       {breastsByUrgency(analysis).map((b) => <BreastCard key={b.label} breast={b} />)}
-      <p className="text-secondary">
-        {analysis.maskedTextRegions === 0 ? 'No se encontró texto con datos personales en la imagen.'
-          : analysis.maskedTextRegions === 1 ? 'Antes de analizar se tapó 1 zona de texto con posibles datos personales.'
-            : `Antes de analizar se taparon ${analysis.maskedTextRegions} zonas de texto con posibles datos personales.`}{' '}
-        Versión del modelo: {analysis.modelVersion}.
-      </p>
+      <p className="text-secondary">{r.masked(analysis.maskedTextRegions)} {r.modelVersion(analysis.modelVersion)}</p>
       <div className="actions">
-        <button type="button" className="button button--primary" onClick={onNewImage}>Analizar otra imagen</button>
-        <a className="button button--secondary" href={ROUTES.review}>Volver a la imagen</a>
+        <button type="button" className="button button--primary" onClick={onNewImage}>{r.analyzeAnother}</button>
+        <a className="button button--secondary" href={ROUTES.review}>{r.backToImage}</a>
       </div>
     </>
   );
 }
 
 function BreastCard({ breast }: { breast: BreastResult }) {
+  const { t } = useI18n();
   const id = `breast-${breast.label.replace(/\W+/g, '-')}`;
   return (
     <article className="card" aria-labelledby={id}>
       <div className="card__header">
-        <h2 id={id}>{breastTitle(breast.side, breast.label)}</h2>
+        <h2 id={id}>{t.breastTitle(breast.side, breast.label)}</h2>
         <LevelBadge level={breast.level} />
       </div>
-      <p>{LEVEL_COPY[breast.level].explanation}</p>
+      <p>{t.levels[breast.level].explanation}</p>
       <Probabilities probabilities={breast.probabilities} />
       {breast.views.map((v) => <ViewHeatmap key={v.panel} view={v} />)}
     </article>
@@ -132,18 +127,21 @@ function BreastCard({ breast }: { breast: BreastResult }) {
 }
 
 function Probabilities({ probabilities }: { probabilities: BiradsProbabilities }) {
+  const { t } = useI18n();
+  const g = t.result.groups;
   const rows: [string, number][] = [
-    ['BI-RADS 1-2 (control habitual)', probabilities.routine],
-    ['BI-RADS 3 (seguimiento corto)', probabilities.shortFollowUp],
-    ['BI-RADS 4-5 (biopsia)', probabilities.biopsy],
+    [g.routine, probabilities.routine],
+    [g.shortFollowUp, probabilities.shortFollowUp],
+    [g.biopsy, probabilities.biopsy],
   ];
   return (
-    <dl className="probabilities" aria-label="Probabilidad estimada por grupo BI-RADS">
+    <dl className="probabilities" aria-label={t.result.probabilitiesLabel}>
       {rows.map(([label, value]) => (
         <div key={label} className="probabilities__row">
           <dt>{label}</dt>
           <dd>
-            <span className="probabilities__value">{percent(value)}</span>
+            <span className="probabilities__value">{t.percent(value)}</span>
+            {/* CSS width needs "45%" without the locale's space, so it is not built with the formatter. */}
             <span className="meter" aria-hidden="true"><span className="meter__fill" style={{ inlineSize: `${Math.round(value * 100)}%` }} /></span>
           </dd>
         </div>
@@ -153,23 +151,17 @@ function Probabilities({ probabilities }: { probabilities: BiradsProbabilities }
 }
 
 function ViewHeatmap({ view }: { view: ViewResult }) {
-  const name = `${view.side === 'unknown' ? `Vista ${view.panel}` : SIDE_COPY[view.side]}, ${VIEW_COPY[view.view]}`;
+  const { t } = useI18n();
+  const name = t.result.viewName(view.side, view.panel, view.view);
   if (!view.heatmap) {
-    const lowResolution = view.heatmapUnavailableReason?.startsWith('low_resolution');
-    return (
-      <p className="text-secondary">
-        Mapa de calor no disponible ({name}):{' '}
-        {lowResolution
-          ? 'la imagen necesita al menos 1500 píxeles de alto. Usa la imagen original o acércate más.'
-          : 'no se generó para esta vista.'}
-      </p>
-    );
+    const lowResolution = view.heatmapUnavailableReason?.startsWith('low_resolution') ?? false;
+    return <p className="text-secondary">{t.result.heatmapUnavailable(name, lowResolution)}</p>;
   }
   return (
     <figure className="heatmap">
       <img src={view.heatmap.url} width={view.heatmap.width} height={view.heatmap.height} loading="lazy"
-        alt={`Mapa de calor de ${name}: las zonas en rojo son las que más llamaron la atención del modelo.`} />
-      <figcaption className="text-secondary">{name}. En rojo, las zonas que más llamaron la atención del modelo.</figcaption>
+        alt={t.result.heatmapAlt(name)} />
+      <figcaption className="text-secondary">{t.result.heatmapCaption(name)}</figcaption>
     </figure>
   );
 }

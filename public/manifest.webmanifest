@@ -1,8 +1,8 @@
 {
-  "name": "Triaje de mamografías (prueba)",
-  "short_name": "Triaje mamo",
-  "description": "Triaje orientativo de mamografías por BI-RADS. Herramienta de investigación.",
-  "lang": "es",
+  "name": "Mammogram triage (pilot)",
+  "short_name": "Mammo triage",
+  "description": "Indicative BI-RADS mammogram triage. Research tool.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

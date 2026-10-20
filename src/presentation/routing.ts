@@ -3,10 +3,10 @@ import { useCallback, useSyncExternalStore } from 'react';
 /** Hash routes keep the app working on static hosting and make the browser Back button work (UX-NAV-006). */
 export const ROUTES = {
   home: '#/',
-  review: '#/revisar',
-  analyzing: '#/analizando',
-  result: '#/resultado',
-  settings: '#/ajustes',
+  review: '#/review',
+  analyzing: '#/analyzing',
+  result: '#/result',
+  settings: '#/settings',
 } as const;
 
 export type Route = keyof typeof ROUTES | 'not_found';

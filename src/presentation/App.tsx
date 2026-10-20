@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AnalysisStep, AnalyzeMammogram, Outcome } from '../application/analyzeMammogram';
 import type { ConnectionSettingsUseCases } from '../application/connection';
 import { toFailure, TriageError } from '../application/errors';
-import { APP_NAME } from './copy';
 import { Banner } from './components/Feedback';
 import { Icon } from './components/Icon';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useOnline, useViewHeading } from './hooks';
+import { useI18n } from './i18n/I18nProvider';
 import { ROUTES, useRoute } from './routing';
 import { AnalyzingView } from './views/AnalyzingView';
 import { HomeView } from './views/HomeView';
@@ -29,10 +30,11 @@ function isConfigured(connection: ConnectionSettingsUseCases): boolean {
 }
 
 /**
- * Holds the picked image and the last result in memory only. Leaving the result ("Analizar otra imagen")
+ * Holds the picked image and the last result in memory only. Leaving the result ("Analyze another image")
  * drops both, so no image or result outlives the session.
  */
 export function App({ services }: { services: AppServices }) {
+  const { t } = useI18n();
   const [route, navigate] = useRoute();
   const online = useOnline();
   const [image, setImage] = useState<{ file: File; previewUrl: string } | null>(null);
@@ -138,44 +140,48 @@ export function App({ services }: { services: AppServices }) {
       <a className="skip-link" href="#main" onClick={(e) => {
         e.preventDefault();
         document.getElementById('main')?.focus();
-      }}>Saltar al contenido</a>
+      }}>{t.app.skipLink}</a>
       <header className="header">
         <div className="header__inner">
-          <a className="header__brand" href={ROUTES.home}>{APP_NAME} <span className="tag">Prueba</span></a>
-          <nav aria-label="Principal">
-            <ul className="nav">
-              <li><a href={ROUTES.home} aria-current={route === 'home' ? 'page' : undefined}>Inicio</a></li>
-              <li>
-                <a href={ROUTES.settings} aria-current={route === 'settings' ? 'page' : undefined}>
-                  <Icon name="settings" /> Ajustes
-                </a>
-              </li>
-            </ul>
-          </nav>
+          <a className="header__brand" href={ROUTES.home}>{t.app.name} <span className="tag">{t.app.tag}</span></a>
+          <div className="header__end">
+            <nav aria-label={t.app.navLabel}>
+              <ul className="nav">
+                <li><a href={ROUTES.home} aria-current={route === 'home' ? 'page' : undefined}>{t.app.navHome}</a></li>
+                <li>
+                  <a href={ROUTES.settings} aria-current={route === 'settings' ? 'page' : undefined}>
+                    <Icon name="settings" /> {t.app.navSettings}
+                  </a>
+                </li>
+              </ul>
+            </nav>
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
       {!online && (
         <div className="container">
-          <Banner tone="warning" live="polite" title="Sin conexión a internet">
-            <p>Puedes seguir revisando la imagen. Para analizarla necesitas conexión.</p>
+          <Banner tone="warning" live="polite" title={t.app.offlineTitle}>
+            <p>{t.app.offlineBody}</p>
           </Banner>
         </div>
       )}
       <main id="main" className="container stack" tabIndex={-1}>{view}</main>
       <footer className="footer container">
-        <p className="text-secondary">Herramienta de investigación. Las imágenes no se guardan.</p>
+        <p className="text-secondary">{t.app.footer}</p>
       </footer>
     </>
   );
 }
 
 function NotFound() {
-  const heading = useViewHeading<HTMLHeadingElement>('Página no encontrada');
+  const { t } = useI18n();
+  const heading = useViewHeading<HTMLHeadingElement>(t.notFound.docTitle);
   return (
     <section className="empty">
-      <h1 ref={heading} tabIndex={-1}>Esta página no existe</h1>
-      <p>La dirección no corresponde a ninguna sección de la app.</p>
-      <div className="actions"><a className="button button--primary" href={ROUTES.home}>Ir al inicio</a></div>
+      <h1 ref={heading} tabIndex={-1}>{t.notFound.title}</h1>
+      <p>{t.notFound.body}</p>
+      <div className="actions"><a className="button button--primary" href={ROUTES.home}>{t.notFound.home}</a></div>
     </section>
   );
 }
