@@ -9,4 +9,6 @@ URL.revokeObjectURL ??= () => undefined;
 afterEach(() => {
   cleanup();
   window.location.hash = '';
+  localStorage.clear();
+  sessionStorage.clear();
 });

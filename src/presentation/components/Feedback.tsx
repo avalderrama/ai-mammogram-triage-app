@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react';
 import type { Failure } from '../../application/errors';
 import type { TriageLevel } from '../../domain/triage';
-import { DISCLAIMER, FAILURE_COPY, LEVEL_COPY } from '../copy';
+import { useI18n } from '../i18n/I18nProvider';
 import { Icon, type IconName } from './Icon';
 
 const LEVEL_ICON: Record<TriageLevel, IconName> = { high_priority: 'alert', review: 'eye', no_suspicious_findings: 'check' };
 
 /** Level shown with icon + text + color, never color alone (UX-VIS-013). */
 export function LevelBadge({ level, large = false }: { level: TriageLevel; large?: boolean }) {
+  const { t } = useI18n();
   return (
     <span className={`level level--${level}${large ? ' level--large' : ''}`}>
       <Icon name={LEVEL_ICON[level]} size={large ? 'lg' : 'md'} />
-      <span>{LEVEL_COPY[level].label}</span>
+      <span>{t.levels[level].label}</span>
     </span>
   );
 }
@@ -35,10 +36,11 @@ export function Banner({ tone, title, children, live }:
 }
 
 export function Disclaimer() {
+  const { t } = useI18n();
   return (
     <p className="disclaimer">
       <Icon name="shield" />
-      <span>{DISCLAIMER}</span>
+      <span>{t.disclaimer}</span>
     </p>
   );
 }
@@ -46,7 +48,8 @@ export function Disclaimer() {
 /** Error with a way out (UX-EST-004): what failed, whether it is temporary, what to do, reference code. */
 export function FailurePanel({ failure, headingLevel = 2, actions }:
   { failure: Failure; headingLevel?: 2 | 3; actions: ReactNode }) {
-  const copy = FAILURE_COPY[failure.kind];
+  const { t } = useI18n();
+  const copy = t.failures[failure.kind];
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
     <section className="failure" aria-labelledby="failure-title">
@@ -56,12 +59,10 @@ export function FailurePanel({ failure, headingLevel = 2, actions }:
       </div>
       <p>{copy.body(failure.retryAfterSeconds)}</p>
       {failure.rejectedPanels && failure.rejectedPanels.length > 0 && (
-        <p className="text-secondary">
-          Vistas revisadas: {failure.rejectedPanels.length}. Ninguna se reconoció como mamografía.
-        </p>
+        <p className="text-secondary">{t.failurePanel.reviewedPanels(failure.rejectedPanels.length)}</p>
       )}
       <div className="actions">{actions}</div>
-      <p className="text-secondary failure__reference">Código de referencia: <code>{failure.correlationId}</code></p>
+      <p className="text-secondary failure__reference">{t.failurePanel.reference} <code>{failure.correlationId}</code></p>
     </section>
   );
 }

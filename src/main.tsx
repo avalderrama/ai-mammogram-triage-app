@@ -8,6 +8,7 @@ import { BrowserSettingsRepository } from './infrastructure/browserSettingsRepos
 import { LazyTriageGateway } from './infrastructure/mcp/lazyTriageGateway';
 import { registerServiceWorker } from './infrastructure/serviceWorker';
 import { App } from './presentation/App';
+import { I18nProvider } from './presentation/i18n/I18nProvider';
 import './presentation/styles/tokens.css';
 import './presentation/styles/app.css';
 
@@ -25,7 +26,9 @@ const services = {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App services={services} />
+    <I18nProvider>
+      <App services={services} />
+    </I18nProvider>
   </StrictMode>,
 );
 

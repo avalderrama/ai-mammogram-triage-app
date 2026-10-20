@@ -6,9 +6,12 @@ import type { ConnectionSettingsUseCases } from '../application/connection';
 import { analysis, breast } from '../test/fixtures';
 import { expectNoSeriousA11yViolations } from '../test/axe';
 import { App, type AppServices } from './App';
-import { DISCLAIMER } from './copy';
+import { en } from './i18n/en';
+import { es } from './i18n/es';
+import { I18nProvider } from './i18n/I18nProvider';
+import type { Locale } from './i18n/messages';
 
-const photo = new File(['fake'], 'mamografia.jpg', { type: 'image/jpeg' });
+const photo = new File(['fake'], 'mammogram.jpg', { type: 'image/jpeg' });
 
 function connection(configured = true): ConnectionSettingsUseCases {
   let stored = { serverUrl: configured ? 'https://x.example/mcp' : '', accessKey: configured ? 'k'.repeat(32) : '', rememberKey: false };
@@ -19,28 +22,29 @@ function connection(configured = true): ConnectionSettingsUseCases {
   };
 }
 
-function renderApp(outcome: Outcome | (() => Promise<Outcome>), configured = true) {
+function renderApp(outcome: Outcome | (() => Promise<Outcome>), configured = true, locale?: Locale) {
   const analyze = vi.fn(typeof outcome === 'function' ? outcome : async () => outcome) as unknown as AnalyzeMammogram;
   const services: AppServices = { analyze, connection: connection(configured) };
-  render(<App services={services} />);
+  render(<I18nProvider initialLocale={locale}><App services={services} /></I18nProvider>);
   return { analyze, services };
 }
 
 async function pickAndAnalyze(user = userEvent.setup()) {
   const gallery = document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
   await user.upload(gallery, photo);
-  expect(await screen.findByRole('heading', { level: 1, name: 'Revisar imagen' })).toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Analizar imagen' }));
+  expect(await screen.findByRole('heading', { level: 1, name: 'Review image' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Analyze image' }));
 }
 
-describe('App', () => {
+describe('App (English by default)', () => {
   it('home offers camera and gallery, shows the disclaimer and has no serious a11y violations', async () => {
     renderApp({ ok: true, analysis: analysis() });
-    expect(screen.getByRole('heading', { level: 1, name: 'Triaje orientativo de mamografías' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Tomar foto/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Elegir imagen guardada/ })).toBeInTheDocument();
-    expect(screen.getByText(DISCLAIMER)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Saltar al contenido' })).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe('en');
+    expect(screen.getByRole('heading', { level: 1, name: 'Indicative mammogram triage' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Take photo/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Choose saved image/ })).toBeInTheDocument();
+    expect(screen.getByText(en.disclaimer)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Skip to content' })).toBeInTheDocument();
     await expectNoSeriousA11yViolations();
   });
 
@@ -51,15 +55,15 @@ describe('App', () => {
         views: [{ ...breast().views[0]!, panel: 2, side: 'L', view: 'CC' }] })],
     }) });
     await pickAndAnalyze();
-    expect(await screen.findByRole('heading', { level: 1, name: 'Resultado del triaje' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Mama derecha' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Mama izquierda' })).toBeInTheDocument();
-    expect(screen.getAllByText('Alta prioridad').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText('Sin hallazgos sospechosos')).toBeInTheDocument();
-    expect(screen.getByText(/Reflejos o zonas quemadas/)).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /Mapa de calor de Mama derecha, MLO/ })).toHaveAttribute('width', '400');
-    expect(screen.getByText(DISCLAIMER)).toBeInTheDocument();
-    expect(screen.getByText(/se taparon 2 zonas de texto/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Triage result' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Right breast' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Left breast' })).toBeInTheDocument();
+    expect(screen.getAllByText('High priority').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('No suspicious findings')).toBeInTheDocument();
+    expect(screen.getByText(/Glare or burnt-out areas/)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Heatmap of Right breast, MLO/ })).toHaveAttribute('width', '400');
+    expect(screen.getByText(en.disclaimer)).toBeInTheDocument();
+    expect(screen.getByText(/2 text areas with possible personal data were covered/)).toBeInTheDocument();
     await expectNoSeriousA11yViolations();
   });
 
@@ -70,20 +74,20 @@ describe('App', () => {
       rejectedPanels: [{ panel: 2, mammogramConfidence: 0.03 }],
     }) });
     await pickAndAnalyze();
-    expect(await screen.findByText('Resultado parcial')).toBeInTheDocument();
-    expect(screen.getByText(/al menos 1500 píxeles de alto/)).toBeInTheDocument();
-    expect(screen.getByText(/No se analizaron la vista 2/)).toBeInTheDocument();
+    expect(await screen.findByText('Partial result')).toBeInTheDocument();
+    expect(screen.getByText(/at least 1500 pixels of height/)).toBeInTheDocument();
+    expect(screen.getByText(/View 2 was not analyzed/)).toBeInTheDocument();
   });
 
   it('does not show any BI-RADS result when the image is not a mammogram', async () => {
     renderApp({ ok: false, failure: { kind: 'not_a_mammogram', correlationId: 'AB12CD34', retryable: false,
       rejectedPanels: [{ panel: 1, mammogramConfidence: 0.01 }] } });
     await pickAndAnalyze();
-    expect(await screen.findByRole('heading', { name: 'La imagen no parece una mamografía' })).toBeInTheDocument();
-    expect(screen.queryByText(/BI-RADS 4-5 \(biopsia\)/)).not.toBeInTheDocument();
-    expect(screen.queryByText('Alta prioridad')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'The image doesn’t look like a mammogram' })).toBeInTheDocument();
+    expect(screen.queryByText(/BI-RADS 4-5 \(biopsy\)/)).not.toBeInTheDocument();
+    expect(screen.queryByText('High priority')).not.toBeInTheDocument();
     expect(screen.getByText('AB12CD34')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Volver a intentarlo' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
     await expectNoSeriousA11yViolations();
   });
 
@@ -92,16 +96,16 @@ describe('App', () => {
     const user = userEvent.setup();
     const { analyze } = renderApp(() => new Promise<Outcome>((resolve) => { finish = resolve; }));
     await pickAndAnalyze(user);
-    expect(await screen.findByRole('heading', { level: 1, name: 'Analizando la imagen' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Analyzing the image' })).toBeInTheDocument();
     await expectNoSeriousA11yViolations();
-    await user.click(screen.getByRole('button', { name: 'Cancelar análisis' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel analysis' }));
     const signal = (analyze as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![2] as AbortSignal;
     expect(signal.aborted).toBe(true);
     // The cancellation shows right away, without waiting for the request to settle.
-    expect(await screen.findByRole('heading', { name: 'Cancelaste el análisis' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'You cancelled the analysis' })).toBeInTheDocument();
     await act(async () => finish({ ok: true, analysis: analysis() }));
-    expect(screen.queryByText('Mama derecha')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Volver a intentarlo' })).toBeInTheDocument();
+    expect(screen.queryByText('Right breast')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 
   it('cannot submit twice while an analysis is running', async () => {
@@ -118,9 +122,9 @@ describe('App', () => {
     const { analyze } = renderApp({ ok: true, analysis: analysis() }, false);
     const gallery = document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
     await user.upload(gallery, photo);
-    const button = await screen.findByRole('button', { name: 'Analizar imagen' });
+    const button = await screen.findByRole('button', { name: 'Analyze image' });
     expect(button).toHaveAttribute('aria-disabled', 'true');
-    expect(button).toHaveAccessibleDescription(/configura el servidor y la clave/);
+    expect(button).toHaveAccessibleDescription(/set up the server and the key/);
     await user.click(button);
     expect(analyze).not.toHaveBeenCalled();
   });
@@ -128,7 +132,7 @@ describe('App', () => {
   it('draws each probability bar proportional to its value', async () => {
     renderApp({ ok: true, analysis: analysis({ breasts: [breast({ probabilities: { routine: 0.45, shortFollowUp: 0.03, biopsy: 0.52 } })] }) });
     await pickAndAnalyze();
-    await screen.findByRole('heading', { level: 1, name: 'Resultado del triaje' });
+    await screen.findByRole('heading', { level: 1, name: 'Triage result' });
     const widths = [...document.querySelectorAll<HTMLElement>('.meter__fill')].map((el) => el.style.inlineSize);
     expect(widths).toEqual(['45%', '3%', '52%']);
   });
@@ -139,36 +143,36 @@ describe('App', () => {
     const { analyze } = renderApp(() => new Promise<Outcome>((resolve) => { finish = resolve; }));
     await pickAndAnalyze(user);
     await act(async () => { window.history.back(); });
-    await screen.findByRole('heading', { level: 1, name: 'Revisar imagen' });
+    await screen.findByRole('heading', { level: 1, name: 'Review image' });
     const gallery = document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
-    await user.upload(gallery, new File(['other'], 'otra.png', { type: 'image/png' }));
+    await user.upload(gallery, new File(['other'], 'other.png', { type: 'image/png' }));
     const signal = (analyze as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![2] as AbortSignal;
     expect(signal.aborted).toBe(true);
     await act(async () => finish({ ok: true, analysis: analysis() }));
-    expect(screen.getByRole('heading', { level: 1, name: 'Revisar imagen' })).toBeInTheDocument();
-    const button = screen.getByRole('button', { name: 'Analizar imagen' });
+    expect(screen.getByRole('heading', { level: 1, name: 'Review image' })).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'Analyze image' });
     expect(button).not.toHaveAttribute('aria-disabled', 'true');
     await user.click(button);
     expect(analyze).toHaveBeenCalledTimes(2);
   });
 
   it('result view without an analysis shows an actionable empty state', async () => {
-    window.location.hash = '#/resultado';
+    window.location.hash = '#/result';
     renderApp({ ok: true, analysis: analysis() });
-    expect(await screen.findByRole('heading', { name: 'Todavía no hay ningún resultado' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Elegir una imagen' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'There is no result yet' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choose an image' })).toBeInTheDocument();
   });
 });
 
 describe('Settings', () => {
   it('validates inline, keeps what was typed and tests the connection', async () => {
-    window.location.hash = '#/ajustes';
+    window.location.hash = '#/settings';
     const user = userEvent.setup();
     const { services } = renderApp({ ok: true, analysis: analysis() }, false);
-    const url = await screen.findByLabelText(/Dirección del servidor/);
+    const url = await screen.findByLabelText(/Server address/);
     await user.type(url, 'http://remote.example/mcp');
-    await user.type(screen.getByLabelText(/Clave de acceso/), 'short');
-    await user.click(screen.getByRole('button', { name: 'Guardar y probar conexión' }));
+    await user.type(screen.getByLabelText(/Access key/), 'short');
+    await user.click(screen.getByRole('button', { name: 'Save and test connection' }));
     expect(url).toHaveAttribute('aria-invalid', 'true');
     expect(url).toHaveAccessibleDescription(/https:\/\//);
     expect(url).toHaveFocus();
@@ -177,11 +181,45 @@ describe('Settings', () => {
 
     await user.clear(url);
     await user.type(url, 'https://tunnel.example/mcp');
-    const key = screen.getByLabelText(/Clave de acceso/);
+    const key = screen.getByLabelText(/Access key/);
     await user.clear(key);
     await user.type(key, 'k'.repeat(30));
-    await user.click(screen.getByRole('button', { name: 'Guardar y probar conexión' }));
-    expect(await screen.findByText('Conexión correcta')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save and test connection' }));
+    expect(await screen.findByText('Connection OK')).toBeInTheDocument();
     expect(services.connection.test).toHaveBeenCalledWith({ serverUrl: 'https://tunnel.example/mcp', accessKey: 'k'.repeat(30) });
+  });
+});
+
+describe('Language', () => {
+  it('switches to Spanish, updates <html lang> and remembers the choice', async () => {
+    const user = userEvent.setup();
+    renderApp({ ok: true, analysis: analysis() });
+    await user.selectOptions(screen.getByLabelText('Language'), 'es');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Triaje orientativo de mamografías' })).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe('es');
+    expect(screen.getByText(es.disclaimer)).toBeInTheDocument();
+    expect(screen.getByLabelText('Idioma')).toHaveValue('es');
+    expect(localStorage.getItem('mammo-triage.locale')).toBe('es');
+    await expectNoSeriousA11yViolations();
+  });
+
+  it('shows the whole flow in Spanish', async () => {
+    const user = userEvent.setup();
+    renderApp({ ok: true, analysis: analysis() }, true, 'es');
+    const gallery = document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
+    await user.upload(gallery, photo);
+    await user.click(await screen.findByRole('button', { name: 'Analizar imagen' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Resultado del triaje' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Mama derecha' })).toBeInTheDocument();
+    expect(screen.getAllByText('Alta prioridad').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/se taparon 2 zonas de texto/)).toBeInTheDocument();
+    expect(screen.getByText('80 %')).toBeInTheDocument();
+  });
+
+  it('keeps every key of the Spanish catalog in sync with English', () => {
+    const shape = (o: object): string[] => Object.entries(o).flatMap(([k, v]) =>
+      (v && typeof v === 'object' && !Array.isArray(v) ? shape(v).map((s) => `${k}.${s}`) : [k])).sort();
+    expect(shape(es)).toEqual(shape(en));
+    expect(es.home.tips).toHaveLength(en.home.tips.length);
   });
 });

@@ -57,6 +57,8 @@ main { padding-block: var(--space-6) var(--space-12); }
   font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); padding: 0 var(--space-2);
   border-radius: var(--radius-full); background: var(--color-feedback-info-bg); color: var(--color-feedback-info);
 }
+.header__end { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.language__select { min-block-size: var(--target-min); inline-size: auto; padding-block: var(--space-1); }
 .nav { list-style: none; display: flex; gap: var(--space-2); margin: 0; padding: 0; }
 .nav a {
   display: inline-flex; align-items: center; gap: var(--space-1); min-block-size: var(--target-min);

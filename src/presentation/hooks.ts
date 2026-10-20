@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useI18n } from './i18n/I18nProvider';
 
 function subscribeOnline(onChange: () => void): () => void {
   window.addEventListener('online', onChange);
@@ -16,10 +17,13 @@ export function useOnline(): boolean {
 /** Moves focus to the view heading and updates the document title on every view change (UX-NAV-001). */
 export function useViewHeading<T extends HTMLElement>(title: string) {
   const ref = useRef<T>(null);
+  const { t } = useI18n();
   useEffect(() => {
-    document.title = `${title} · Triaje de mamografías`;
+    document.title = `${title} · ${t.app.titleSuffix}`;
+  }, [title, t]);
+  useEffect(() => {
     ref.current?.focus();
-  }, [title]);
+  }, []);
   return ref;
 }
 
