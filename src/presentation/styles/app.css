@@ -326,6 +326,7 @@ input[aria-invalid="true"] { border: var(--border-width-strong) solid var(--colo
 .viewer__frame { background: var(--color-surface-sunken); border-radius: var(--radius-lg); padding: var(--space-2); display: flex; justify-content: center; }
 .viewer__canvas { position: relative; inline-size: 100%; max-inline-size: 28rem; }
 .viewer__canvas img { inline-size: 100%; block-size: 100%; border-radius: var(--radius-md); }
+.viewer__overlay { position: absolute; inset: 0; }
 .marker {
   position: absolute; border: var(--marker-width) solid var(--color-marker); border-radius: var(--radius-sm);
   box-shadow: 0 0 0 var(--border-width) var(--color-surface-sunken);
@@ -337,6 +338,7 @@ input[aria-invalid="true"] { border: var(--border-width-strong) solid var(--colo
   font-size: var(--font-size-sm); text-align: center; line-height: 1.5;
 }
 .viewer__caption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-3); color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.viewer__switches { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); border: 0; margin: 0; padding: 0; min-inline-size: 0; }
 .switch { display: inline-flex; align-items: center; gap: var(--space-2); min-block-size: var(--target-min); cursor: pointer; color: var(--color-text-primary); font-weight: var(--font-weight-medium); }
 .switch input { inline-size: var(--icon-size); block-size: var(--icon-size); accent-color: var(--color-action); }
 .regions { display: flex; flex-direction: column; gap: var(--space-2); background: var(--color-surface-muted); border-radius: var(--radius-md); padding: var(--space-4); }

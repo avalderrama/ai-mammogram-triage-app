@@ -14,9 +14,41 @@ describe('toAnalysis', () => {
     expect(result.rejectedPanels).toEqual([{ panel: 3, mammogramConfidence: 0.02 }]);
     const [cc, mlo] = result.breasts[0]!.views;
     expect(cc!.heatmap).toEqual({ url: `data:image/png;base64,${png}`, width: 300, height: 600 });
+    expect(cc!.heatmapOverlay).toBeNull(); // an older server: one combined image, nothing to hide
     expect(mlo!.heatmap).toBeNull();
     expect(mlo!.heatmapUnavailableReason).toMatch(/^low_resolution/);
     expect(result.breasts[0]!.probabilities).toEqual({ routine: 0.6, shortFollowUp: 0.3, biopsy: 0.1 });
+  });
+
+  const twoViews = { ...serverPayload, heatmap_format: 'layers',
+    breasts: [{ ...serverPayload.breasts[0]!, views: [serverPayload.breasts[0]!.views[0]!, { ...serverPayload.breasts[0]!.views[0]!, panel: 2 }] }] };
+  const blocks = (...images: string[]) =>
+    [{ type: 'text', text: '{}' }, ...images.map((data) => ({ type: 'image', data, mimeType: 'image/png' }))];
+
+  it('pairs the breast and its red-area layer per view with heatmap layers', () => {
+    const [left, leftRed, right, rightRed] = [pngBase64(300, 600), pngBase64(300, 600), pngBase64(200, 400), pngBase64(200, 400)];
+    const [first, second] = toAnalysis({ structuredContent: twoViews, content: blocks(left, leftRed, right, rightRed) })
+      .breasts[0]!.views;
+    expect(first!.heatmap?.url).toContain(left);
+    expect(first!.heatmapOverlay?.width).toBe(300);
+    expect(second!.heatmap?.width).toBe(200);
+    expect(second!.heatmapOverlay?.url).toContain(rightRed);
+  });
+
+  it('refuses a result whose images do not match its views instead of shifting them', () => {
+    const png = pngBase64(300, 600);
+    expect(() => toAnalysis({ structuredContent: twoViews, content: blocks(png, png, png) })).toThrow(TriageError);
+    expect(() => toAnalysis({ structuredContent: serverPayload, content: blocks(png, png) })).toThrow(TriageError);
+  });
+
+  it('refuses a red layer whose size differs from its breast image', () => {
+    const content = blocks(pngBase64(300, 600), pngBase64(301, 600), pngBase64(300, 600), pngBase64(300, 600));
+    expect(() => toAnalysis({ structuredContent: twoViews, content })).toThrow(TriageError);
+  });
+
+  it('refuses an image block that is not a PNG', () => {
+    const notPng = btoa('GIF89a'.padEnd(33, 'A'));
+    expect(() => toAnalysis({ structuredContent: serverPayload, content: blocks(notPng) })).toThrow(TriageError);
   });
 
   it('throws not_a_mammogram with the rejected panels', () => {

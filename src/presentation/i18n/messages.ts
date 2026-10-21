@@ -132,6 +132,10 @@ export interface Messages {
     readonly heatmapUnavailable: (name: string, lowResolution: boolean) => string;
     readonly heatmapAlt: (name: string) => string;
     readonly heatmapCaption: (name: string) => string;
+    readonly breastAlt: (name: string) => string;
+    readonly cleanCaption: (name: string) => string;
+    readonly showHeatmap: string;
+    readonly viewerLayers: string;
     readonly regionsTitle: string;
     readonly regionsNote: string;
     readonly showMarkers: string;

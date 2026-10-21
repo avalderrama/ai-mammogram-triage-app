@@ -257,6 +257,10 @@ export const es: Messages = {
       : 'no se generó para esta vista.'}`,
     heatmapAlt: (name) => `Mapa de calor de ${name}: las zonas en rojo son las que más llamaron la atención del modelo.`,
     heatmapCaption: (name) => `${name}. En rojo, las zonas que más llamaron la atención del modelo.`,
+    breastAlt: (name) => `Mamografía de ${name}, tal como la analizó el modelo.`,
+    cleanCaption: (name) => `${name}, sin el mapa de calor.`,
+    showHeatmap: 'Mostrar mapa de calor',
+    viewerLayers: 'Qué mostrar sobre la imagen',
     regionsTitle: 'Dónde mira el modelo',
     regionsNote: 'Los recuadros numerados marcan las zonas más sospechosas, de mayor a menor. Orientan la lectura; no '
       + 'son el contorno de una lesión.',

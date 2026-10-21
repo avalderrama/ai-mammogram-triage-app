@@ -82,9 +82,31 @@ describe('App (English browser)', () => {
     expect(await screen.findByText('Where the model looks')).toBeInTheDocument();
     expect(screen.getByText('Area 1: middle third, lower part of the breast')).toBeInTheDocument();
     expect(document.querySelectorAll('.marker')).toHaveLength(1);
+    expect(document.querySelector('.viewer__overlay')).toHaveAttribute('src', 'data:image/png;base64,BBBB');
+    // Without the red areas the tissue shows and the numbered boxes still say where to look.
+    await user.click(screen.getByLabelText('Show heatmap'));
+    expect(document.querySelector('.viewer__overlay')).toBeNull();
+    expect(document.querySelectorAll('.marker')).toHaveLength(1);
+    expect(screen.getByRole('img', { name: 'Mammogram of Right breast, MLO, as the model analyzed it.' })).toBeInTheDocument();
+    expect(screen.getByText('Right breast, MLO, without the heatmap.')).toBeInTheDocument();
     await user.click(screen.getByLabelText('Show markers'));
     expect(document.querySelectorAll('.marker')).toHaveLength(0);
     expect(screen.getByText('Area 1: middle third, lower part of the breast')).toBeInTheDocument();
+    await expectNoSeriousA11yViolations();
+    await user.click(screen.getByLabelText('Show heatmap'));
+    expect(document.querySelector('.viewer__overlay')).not.toBeNull();
+    expect(document.querySelectorAll('.marker')).toHaveLength(0);
+  });
+
+  it('hides only the markers when an older server draws the red areas into the image', async () => {
+    const user = userEvent.setup();
+    const view = { ...breast().views[0]!, heatmapOverlay: null };
+    renderApp({ ok: true, analysis: analysis({ breasts: [breast({ views: [view] })] }) });
+    await pickAndAnalyze(user);
+    await user.click(await screen.findByLabelText('Show markers'));
+    expect(document.querySelectorAll('.marker')).toHaveLength(0);
+    expect(screen.queryByLabelText('Show heatmap')).toBeNull();
+    expect(screen.getByRole('img', { name: /Heatmap of Right breast, MLO/ })).toBeInTheDocument();
   });
 
   it('names each breast card by its heading, even for "panel N" labels', async () => {

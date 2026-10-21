@@ -74,8 +74,10 @@ You will also see:
 
 - **Estimated probability per BI-RADS group** (1-2, 3 and 4-5), as a colored bar and as a list with the exact
   percentages. It is the model's estimate for comparison, not an exact clinical probability.
-- **Heatmap:** in red, the areas that drew the model's attention the most. If it does not appear, the app explains
-  why; it is almost always low resolution (the image needs at least 1500 px of height).
+- **Heatmap:** in red, the areas that drew the model's attention the most. Turn off **Show heatmap** under the image to
+  see the tissue under the red areas, while the numbered boxes still mark where to look; **Show markers** hides the
+  boxes. Turn them on again to compare. If the heatmap does not appear, the app explains why; it is almost always
+  low resolution (the image needs at least 1500 px of height).
 - **Marked areas** on the heatmap (see below).
 - **Quality warnings**, with what to do: move closer, focus, remove glare or crop.
 - **Partial result:** some view did not look like a mammogram, or only the general model could be used.

@@ -43,7 +43,10 @@ export interface ViewResult {
   readonly view: ViewType;
   readonly probabilities: BiradsProbabilities;
   readonly qualityIssues: readonly QualityIssue[];
+  /** The processed breast: alone when there is an overlay, otherwise with the red areas already drawn on it. */
   readonly heatmap: HeatmapImage | null;
+  /** The red areas alone on a transparent image of the same size, drawn over `heatmap` and hidden at will. */
+  readonly heatmapOverlay: HeatmapImage | null;
   readonly heatmapUnavailableReason: string | null;
   /** Most suspicious first; empty when the image was too small for the high-resolution model. */
   readonly regions: readonly SuspiciousRegion[];
