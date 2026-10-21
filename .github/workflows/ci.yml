@@ -32,7 +32,7 @@ jobs:
         # Documentation only: Markdown files, docs/, LICENSE and NOTICE. Anything else, or a diff that cannot be
         # computed (first push of a branch), counts as code.
         run: |
-          if files=$(git diff --name-only "$BASE" "$GITHUB_SHA" 2>/dev/null) \
+          if files=$(git diff --no-renames --name-only "$BASE" "$GITHUB_SHA" 2>/dev/null) \
              && ! grep -qvE '(\.md$|^docs/|^LICENSE$|^NOTICE$)' <<< "$files"; then
             echo "Documentation only:"; echo "$files"
             echo "code=false" >> "$GITHUB_OUTPUT"
@@ -61,7 +61,7 @@ jobs:
         env:
           VITE_DEFAULT_SERVER_URL: https://app.mammotriage.com/mcp
       - name: The build only connects to its own server
-        run: grep -q "connect-src 'self' https://app.mammotriage.com" dist/index.html
+        run: grep -qF "connect-src 'self' https://app.mammotriage.com;" dist/index.html
 
   audit:
     name: Dependency audit

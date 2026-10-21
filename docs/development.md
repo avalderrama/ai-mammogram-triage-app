@@ -70,6 +70,10 @@ the **CI result** job always reports and is the only check the branch protection
 
 ## Deployment
 
+- **Production** (`https://app.mammotriage.com`): `.github/workflows/deploy.yml` builds `main` after a green CI run
+  on it and publishes it to the VM through the Cloudflare tunnel, so merging a pull request is the release. A merge
+  that only changes documentation deploys nothing; **Run workflow** in the Actions tab redeploys by hand. The VM side
+  and the secrets are described in the server repository (`deploy/azure-vm/README.md`, "Automatic deployment").
 - `npm run build` produces `dist/` with a Content Security Policy (CSP) in a `<meta>` tag. With
   `VITE_DEFAULT_SERVER_URL` over HTTPS (production), `connect-src` allows only this origin and that server's;
   without it (development, quick-tunnel pilots), any HTTPS server, because the user types its URL. Headers that only
