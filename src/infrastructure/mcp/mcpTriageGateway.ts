@@ -9,12 +9,17 @@ import { toAnalysis } from './resultMapping';
 const ANALYZE_TOOL = 'mammo_analyze_mammogram';
 const CLIENT_INFO = { name: 'ai-mammogram-triage-app', version: '0.1.0' };
 
-interface HttpObservation { status?: number; retryAfter?: number }
+interface HttpObservation { status?: number; retryAfter?: number; redirected?: boolean }
 
-/** Records status and Retry-After of the last HTTP response, which the SDK errors do not expose. */
+/**
+ * Records status and Retry-After of the last HTTP response, which the SDK errors do not expose.
+ * The MCP endpoint never redirects; a redirect means a gateway in front of it (Cloudflare Access) wants the user to
+ * sign in again. Following it would end in an opaque CORS failure, so it is stopped and recorded instead.
+ */
 function observingFetch(observation: HttpObservation): typeof fetch {
   return async (input, init) => {
-    const response = await fetch(input, init);
+    const response = await fetch(input, { ...init, redirect: 'manual' });
+    observation.redirected = response.type === 'opaqueredirect';
     observation.status = response.status;
     const retry = Number(response.headers.get('retry-after'));
     observation.retryAfter = Number.isFinite(retry) && retry > 0 ? retry : undefined;
@@ -27,6 +32,7 @@ export function toTriageError(error: unknown, observation: HttpObservation, sign
   if (signal?.aborted || (error as { name?: unknown } | null)?.name === 'AbortError') {
     return new TriageError('cancelled', { cause: error });
   }
+  if (observation.redirected) return new TriageError('session_expired', { cause: error });
   const status = error instanceof SdkHttpError ? error.status : observation.status;
   if (error instanceof UnauthorizedError || status === 401) return new TriageError('unauthorized', { cause: error });
   // 421: Host not in MAMMO_ALLOWED_HOSTS; 403: Origin not allowed (only seen outside browsers' CORS checks).
@@ -57,8 +63,10 @@ export class McpTriageGateway implements TriageGateway {
     work: (client: Client) => Promise<T>): Promise<T> {
     if (typeof navigator !== 'undefined' && !navigator.onLine) throw new TriageError('offline');
     const observation: HttpObservation = {};
+    // Without a key, no Authorization header is sent: the Cloudflare Access session (same-origin cookie) identifies
+    // the user instead.
     const transport = new StreamableHTTPClientTransport(serverUrl(settings.serverUrl), {
-      authProvider: { token: async () => settings.accessKey },
+      ...(settings.accessKey && { authProvider: { token: async () => settings.accessKey } }),
       fetch: observingFetch(observation),
     });
     const client = new Client(CLIENT_INFO);

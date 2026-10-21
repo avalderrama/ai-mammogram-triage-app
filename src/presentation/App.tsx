@@ -26,7 +26,7 @@ type Run =
 
 function isConfigured(connection: ConnectionSettingsUseCases): boolean {
   const s = connection.load();
-  return Boolean(s.serverUrl && s.accessKey);
+  return Boolean(s.serverUrl); // the access key is optional (not needed behind Cloudflare Access)
 }
 
 /**

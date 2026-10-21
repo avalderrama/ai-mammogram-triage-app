@@ -8,6 +8,7 @@ export type FailureKind =
   | 'too_large'
   | 'invalid_input'
   | 'unauthorized'
+  | 'session_expired'
   | 'server_misconfigured'
   | 'server_busy'
   | 'app_outdated'

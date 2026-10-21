@@ -18,7 +18,8 @@ npm run dev
 The app runs at `http://127.0.0.1:5173`.
 
 To develop against the real server, start `mammo-triage http` locally, with `MAMMO_ALLOWED_ORIGINS` including
-`http://127.0.0.1:5173`. Then, in Settings, enter the URL `http://127.0.0.1:8765/mcp` and the key from your `.env`.
+`http://127.0.0.1:5173`. Then, in Settings, enter the URL `http://127.0.0.1:8765/mcp` and the key from your `.env` (a
+local server has no Cloudflare Access, so it needs the key).
 
 `.env.example` documents `VITE_DEFAULT_SERVER_URL`, the default server address shown in Settings. The access key is
 never configured there.
@@ -48,15 +49,19 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 | `domain/triage.test.ts` | Ordering by urgency, partial result and warnings |
 | `application/analyzeMammogram.test.ts` | Validation, steps, error translation and cancellation |
 | `infrastructure/mcp/resultMapping.test.ts` | Contract with the server (zod), order and size of the heatmaps, and error codes |
-| `infrastructure/mcp/mcpTriageGateway.test.ts` | HTTP responses and SDK errors → `kind` |
+| `infrastructure/mcp/mcpTriageGateway.test.ts` | HTTP responses and SDK errors → `kind`; no `Authorization` header without a key; a redirect (Cloudflare Access) → `session_expired` |
 | `infrastructure/mcp/lazyTriageGateway.test.ts` | Lazy loading, `app_outdated` when the download fails, and a new attempt on the next request |
 | `infrastructure/browserSettingsRepository.test.ts` | The key never goes to `localStorage`; the server URL is remembered |
 | `infrastructure/serviceWorker.test.ts` | The service worker does not intercept the MCP server or store images |
-| `presentation/App.test.tsx` | Full flows (English by default), five states, cancellation, double submission, Settings, axe, the lesion markers (the **Show markers** switch hides them; the list of areas in words stays), the probability bar, switching to Spanish (`<html lang>` and remembered choice), the full flow in Spanish, and identical keys in the `es` and `en` catalogs |
+| `presentation/i18n/I18nProvider.test.tsx` | Initial language from the browser (`navigator.languages`, with fallback to `navigator.language`); the user's stored choice wins |
+| `presentation/App.test.tsx` | Full flows (English browser), five states, cancellation, double submission, Settings, axe, the lesion markers (the **Show markers** switch hides them; the list of areas in words stays), the probability bar, switching to Spanish (`<html lang>` and remembered choice), the full flow in Spanish, and identical keys in the `es` and `en` catalogs |
 
 ## Deployment
 
-- `npm run build` produces `dist/` with a Content Security Policy (CSP) in a `<meta>` tag.
+- `npm run build` produces `dist/` with a Content Security Policy (CSP) in a `<meta>` tag. With
+  `VITE_DEFAULT_SERVER_URL` over HTTPS (production), `connect-src` allows only this origin and that server's;
+  without it (development, quick-tunnel pilots), any HTTPS server, because the user types its URL. Headers that only
+  work outside `<meta>` (`frame-ancestors`) are set by nginx in the server repository.
 - Deploy only a clean build: **never** leave test images in `dist/`.
 - Hosting options:
   - `npm run preview` behind a tunnel (this is what `start_pilot.ps1` does in the server repository);

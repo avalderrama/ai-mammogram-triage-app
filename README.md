@@ -8,8 +8,8 @@ for each breast**: High priority, Review or No suspicious findings. The result i
 group, photo-quality warnings and, when the resolution allows it, a heatmap with up to three numbered boxes on the
 areas the model found most suspicious.
 
-The interface is in **English by default** and can be switched to **Spanish** with the Language selector in the
-header.
+The interface opens in the **browser's language** (Spanish or English; English for any other language) and can be
+switched with the Language selector in the header. The choice is remembered on the device.
 
 > ⚠️ **Research tool.** It is not a medical device and never replaces the radiologist's reading.
 
@@ -33,8 +33,9 @@ It is part of a three-repository project:
 ## Privacy
 
 - The image is kept **in memory only**: it is never stored in `localStorage`, IndexedDB or the service worker cache.
-- The **access key** lives in memory. If the user asks for it, it goes to `sessionStorage`, which is cleared when the
-  tab closes. It never goes to `localStorage` or the URL.
+- The **access key** is optional: behind Cloudflare Access the sign-in identifies the user. When there is one, it
+  lives in memory. If the user asks for it, it goes to `sessionStorage`, which is cleared when the tab closes. It
+  never goes to `localStorage` or the URL.
 - `localStorage` holds only the server address and the language preference.
 - Only `https://` servers are accepted, or local `http://` for development.
 - The service worker caches only the app shell.
@@ -51,7 +52,8 @@ npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`, go to **Settings** and enter the server address (it ends in `/mcp`) and the access key.
+Open `http://127.0.0.1:5173`, go to **Settings** and enter the server address (it ends in `/mcp`) and, for a server
+without Cloudflare Access, the access key.
 
 ## Documentation
 
@@ -81,8 +83,9 @@ npm test
 
 ## Pilot access
 
-The app needs a server address and an access key. Physicians and researchers who want to try it in a research
-pilot can request them with the **[pilot access form](https://forms.gle/2msrWXkJW7Cj9rYV8)**.
+In the pilot, physicians sign in with their e-mail and a one-time code (Cloudflare Access) and need no access key.
+Physicians and researchers who want to try it in a research pilot can request access with the
+**[pilot access form](https://forms.gle/2msrWXkJW7Cj9rYV8)**.
 
 ## License
 

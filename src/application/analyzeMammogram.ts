@@ -27,7 +27,8 @@ export function createAnalyzeMammogram(deps: AnalyzeDependencies) {
     const correlationId = deps.newCorrelationId();
     try {
       const settings = deps.settings.load();
-      if (!settings.serverUrl || !settings.accessKey) throw new TriageError('not_configured');
+      // The key is optional: behind Cloudflare Access the sign-in identifies the user (ADR 0006 of the server).
+      if (!settings.serverUrl) throw new TriageError('not_configured');
       if (!input.file.type.startsWith('image/')) throw new TriageError('not_an_image');
       if (input.layout && input.panelCount !== undefined
         && (input.layout.sides.length !== input.panelCount || input.layout.views.length !== input.panelCount)) {

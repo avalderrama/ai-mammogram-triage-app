@@ -7,7 +7,8 @@
     <meta name="theme-color" content="#1d5bd8" />
     <meta name="referrer" content="no-referrer" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="manifest" href="./manifest.webmanifest" />
+    <!-- Behind Cloudflare Access the manifest needs the session cookie, which browsers only send with use-credentials. -->
+    <link rel="manifest" href="./manifest.webmanifest" crossorigin="use-credentials" />
     <title>Mammogram triage</title>
   </head>
   <body>

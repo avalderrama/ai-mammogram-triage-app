@@ -6,13 +6,27 @@ import { DEFAULT_LOCALE, LOCALES, type Locale, type Messages } from './messages'
 const CATALOG: Record<Locale, Messages> = { en, es };
 const STORAGE_KEY = 'mammo-triage.locale';
 
-/** The language preference is not sensitive, so it is remembered in localStorage (when available). */
-function storedLocale(): Locale {
+const isLocale = (value: string | null | undefined): value is Locale => LOCALES.includes(value as Locale);
+
+/** First supported language among the browser's preferences, by primary subtag (es-CO → es); otherwise English. */
+export function browserLocale(languages: readonly (string | undefined)[]): Locale {
+  return languages.map((tag) => tag?.split('-')[0]?.toLowerCase()).find(isLocale) ?? DEFAULT_LOCALE;
+}
+
+/** Some WebViews and privacy modes report an empty `languages` list: fall back to `language`. */
+function browserLanguages(): readonly (string | undefined)[] {
+  if (typeof navigator === 'undefined') return [];
+  return navigator.languages?.length ? navigator.languages : [navigator.language];
+}
+
+/** The user's explicit choice wins; it is not sensitive, so it is remembered in localStorage (when available). */
+function initialChoice(): Locale {
+  const browser = browserLocale(browserLanguages());
   try {
-    const value = localStorage.getItem(STORAGE_KEY);
-    return LOCALES.includes(value as Locale) ? (value as Locale) : DEFAULT_LOCALE;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return isLocale(stored) ? stored : browser;
   } catch {
-    return DEFAULT_LOCALE;
+    return browser;
   }
 }
 
@@ -24,9 +38,12 @@ interface I18n {
 
 const I18nContext = createContext<I18n>({ t: en, locale: 'en', setLocale: () => undefined });
 
-/** English by default; the user can switch to Spanish. Keeps <html lang> in sync (UX-ACC-011). */
+/**
+ * Starts in the browser's language (English when it is neither English nor Spanish); the user can switch, and that
+ * choice is remembered. Keeps <html lang> in sync (UX-ACC-011).
+ */
 export function I18nProvider({ children, initialLocale }: { children: ReactNode; initialLocale?: Locale }) {
-  const [locale, setLocaleState] = useState<Locale>(() => initialLocale ?? storedLocale());
+  const [locale, setLocaleState] = useState<Locale>(() => initialLocale ?? initialChoice());
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);

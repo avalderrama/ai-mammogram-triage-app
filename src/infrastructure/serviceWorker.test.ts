@@ -73,6 +73,12 @@ describe('service worker', () => {
     expect([...stored.keys()]).toEqual([`${ORIGIN}/icon.svg`]);
   });
 
+  it('never intercepts the same-origin MCP server, not even its GET requests', async () => {
+    expect(await dispatch(new Request(`${ORIGIN}/mcp`))).toBe(false);
+    expect(await dispatch(new Request(`${ORIGIN}/health`))).toBe(false);
+    expect(stored.size).toBe(0);
+  });
+
   it('ignores other same-origin paths', async () => {
     expect(await dispatch(new Request(`${ORIGIN}/e2e/test.png`))).toBe(false);
   });
