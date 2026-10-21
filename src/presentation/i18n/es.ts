@@ -48,7 +48,7 @@ export const es: Messages = {
   failures: {
     not_configured: {
       title: 'Falta configurar la conexión',
-      body: () => 'Indica la dirección del servidor (https) y la clave de acceso del piloto.',
+      body: () => 'Indica la dirección del servidor (https).',
     },
     not_an_image: {
       title: 'El archivo no es una imagen',
@@ -74,8 +74,14 @@ export const es: Messages = {
         + 'Si no, prueba con otra imagen.',
     },
     unauthorized: {
-      title: 'La clave de acceso no es válida',
-      body: () => 'Revísala en Ajustes o pide una nueva al responsable del piloto.',
+      title: 'Se denegó el acceso',
+      body: () => 'Si el piloto te dio una clave de acceso, revísala en Ajustes o pide una nueva al responsable del '
+        + 'piloto. Si entras con tu correo, recarga la página; si sigue pasando, avisa al responsable del piloto.',
+    },
+    session_expired: {
+      title: 'Tu sesión expiró',
+      body: () => 'Recarga la página e inicia sesión de nuevo con tu correo y el código que te llega. Después vuelve a '
+        + 'elegir la imagen.',
     },
     server_misconfigured: {
       title: 'El servidor rechaza esta conexión',
@@ -134,7 +140,7 @@ export const es: Messages = {
     lead: 'Fotografía una mamografía en pantalla o en placa y obtén, para cada mama, un nivel de prioridad: alta '
       + 'prioridad, revisar o sin hallazgos sospechosos.',
     beforeStartTitle: 'Antes de empezar',
-    beforeStartBody: 'Configura la dirección del servidor y la clave de acceso en',
+    beforeStartBody: 'Configura la dirección del servidor en',
     settingsLink: 'Ajustes',
     eyebrow: 'Piloto de investigación',
     howTitle: 'Cómo funciona',
@@ -172,7 +178,7 @@ export const es: Messages = {
     left: 'Izquierda',
     cc: 'CC (craneocaudal)',
     mlo: 'MLO (oblicua mediolateral)',
-    blockedNotConfigured: 'Primero configura el servidor y la clave en Ajustes.',
+    blockedNotConfigured: 'Primero configura el servidor en Ajustes.',
     blockedOffline: 'Sin conexión a internet: conéctate para analizar.',
     goToSettings: 'Ir a Ajustes',
     analyze: 'Analizar imagen',
@@ -237,10 +243,12 @@ export const es: Messages = {
     title: 'Ajustes de conexión',
     lead: 'Datos que te da el responsable del piloto para conectar la app con el servidor de análisis.',
     required: '(obligatoria)',
+    optional: '(opcional)',
     serverLabel: 'Dirección del servidor',
     serverHint: 'Termina en /mcp. Ejemplo: https://ejemplo.trycloudflare.com/mcp',
     keyLabel: 'Clave de acceso',
-    keyHint: 'No se guarda en este dispositivo salvo que marques la casilla de abajo.',
+    keyHint: 'Solo si el piloto te dio una: no la necesitas cuando entras con tu correo. No se guarda en este '
+      + 'dispositivo salvo que marques la casilla de abajo.',
     show: 'Mostrar',
     hide: 'Ocultar',
     remember: 'Recordar la clave mientras esta pestaña esté abierta',
@@ -254,7 +262,6 @@ export const es: Messages = {
     errors: {
       serverMissing: 'Escribe la dirección del servidor.',
       serverInvalid: 'Usa una dirección que empiece por https:// (por ejemplo https://ejemplo.trycloudflare.com/mcp).',
-      keyMissing: 'Escribe la clave de acceso.',
       keyShort: 'La clave tiene al menos 24 caracteres. Revisa que esté completa.',
     },
   },

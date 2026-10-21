@@ -3,7 +3,8 @@
  *  - Only same-origin GET requests for the shell (HTML, JS, CSS, manifest, icons) are cached.
  *  - Images picked by the user are never fetched through here (they stay in memory), and responses with an
  *    image content type other than the app icon are never stored.
- *  - Cross-origin traffic (the MCP server) is never intercepted.
+ *  - The MCP server is never intercepted, whether it is cross-origin or on this origin (/mcp, /health behind
+ *    Cloudflare Access): its answers are per request and must never come from a cache.
  */
 const CACHE = 'mammo-triage-shell-v1';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
@@ -28,6 +29,7 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (url.pathname.endsWith('/mcp') || url.pathname.endsWith('/health')) return;
 
   if (request.mode === 'navigate') {
     // Network first so updates arrive; cached shell when offline.
