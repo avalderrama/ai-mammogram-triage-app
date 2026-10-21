@@ -3,8 +3,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createAnalyzeMammogram } from './application/analyzeMammogram';
 import { createConnectionSettings } from './application/connection';
+import { createProposeCrop } from './application/proposeCrop';
 import { BrowserImagePreparer } from './infrastructure/browserImagePreparer';
 import { BrowserSettingsRepository } from './infrastructure/browserSettingsRepository';
+import { CanvasCropDetector } from './infrastructure/canvasCropDetector';
 import { LazyTriageGateway } from './infrastructure/mcp/lazyTriageGateway';
 import { registerServiceWorker } from './infrastructure/serviceWorker';
 import { App } from './presentation/App';
@@ -22,6 +24,7 @@ const services = {
     gateway, preparer: new BrowserImagePreparer(), settings, maxImageBytes: MAX_IMAGE_BYTES, newCorrelationId,
   }),
   connection: createConnectionSettings(gateway, settings, newCorrelationId),
+  proposeCrop: createProposeCrop(new CanvasCropDetector()),
 };
 
 createRoot(document.getElementById('root')!).render(

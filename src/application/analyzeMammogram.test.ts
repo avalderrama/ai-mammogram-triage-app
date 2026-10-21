@@ -70,3 +70,18 @@ describe('analyzeMammogram', () => {
     expect(!outcome.ok && outcome.failure.kind).toBe('cancelled');
   });
 });
+
+describe('analyzeMammogram crop', () => {
+  it('passes the crop to the preparer, and no crop when it covers the whole image', async () => {
+    const prepare = vi.fn(async () => ({ base64: 'AAAA' }));
+    const run = (crop?: { x: number; y: number; width: number; height: number }) =>
+      createAnalyzeMammogram({ gateway: { analyze: async () => analysis(), testConnection: async () => undefined },
+        preparer: { prepare }, settings: configured, maxImageBytes: 1000, newCorrelationId: () => 'ABC12345' })(
+        { file: image, crop });
+    await run({ x: 0.1, y: 0.05, width: 0.7, height: 0.9 });
+    await run({ x: 0, y: 0, width: 1, height: 1 });
+    await run();
+    expect(prepare.mock.calls.map((c) => (c as unknown[])[2])).toEqual(
+      [{ x: 0.1, y: 0.05, width: 0.7, height: 0.9 }, undefined, undefined]);
+  });
+});

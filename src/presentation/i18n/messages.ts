@@ -1,5 +1,6 @@
 /** Shape of every UI string. Each locale implements it fully, so a missing translation is a type error. */
 import type { FailureKind } from '../../application/errors';
+import type { CropBox, CropCorner, CropEdge } from '../../domain/crop';
 import type { BreastSide, QualityIssue, SuspiciousRegion, TriageLevel, ViewType } from '../../domain/triage';
 
 export type Locale = 'en' | 'es';
@@ -73,9 +74,24 @@ export interface Messages {
     readonly mlo: string;
     readonly blockedNotConfigured: string;
     readonly blockedOffline: string;
+    readonly blockedDetecting: string;
+    readonly blockedRejected: string;
     readonly goToSettings: string;
     readonly analyze: string;
     readonly wrongImage: string;
+    readonly cropDetecting: string;
+    readonly cropDetected: string;
+    readonly cropUncertainTitle: string;
+    readonly cropUncertain: string;
+    readonly cropHelp: string;
+    readonly cropReset: string;
+    readonly cropFull: string;
+    readonly cropCorner: (corner: CropCorner) => string;
+    readonly cropArea: (box: CropBox) => string;
+    readonly cropEdgesSummary: string;
+    readonly cropEdge: (edge: CropEdge) => string;
+    readonly cropInward: string;
+    readonly cropOutward: string;
   };
   readonly analyzing: {
     readonly docTitle: string;
@@ -109,6 +125,7 @@ export interface Messages {
     readonly modelVersion: (version: string) => string;
     readonly analyzeAnother: string;
     readonly backToImage: string;
+    readonly adjustCrop: string;
     readonly probabilitiesLabel: string;
     readonly groups: { readonly routine: string; readonly shortFollowUp: string; readonly biopsy: string };
     readonly viewName: (side: BreastSide, panel: number, view: ViewType) => string;
@@ -154,12 +171,14 @@ export interface Messages {
 }
 
 /** Where the user can fix each failure (language-independent). */
-export const FAILURE_FIX: Record<FailureKind, 'settings' | 'image' | 'retry' | 'reload'> = {
+/** 'crop': the picked image is kept and the area to analyze can be adjusted on the review screen. */
+export const FAILURE_FIX: Record<FailureKind, 'settings' | 'image' | 'crop' | 'retry' | 'reload'> = {
   not_configured: 'settings',
   not_an_image: 'image',
-  not_a_mammogram: 'image',
+  not_a_mammogram: 'crop',
   unreadable_image: 'image',
-  too_large: 'image',
+  too_large: 'crop',
+  too_many_pixels: 'image',
   invalid_input: 'image',
   unauthorized: 'settings',
   session_expired: 'reload',

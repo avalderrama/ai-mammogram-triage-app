@@ -248,6 +248,45 @@ input[aria-invalid="true"] { border: var(--border-width-strong) solid var(--colo
   border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
 }
 
+/* Review: crop editor. The frame shrink-wraps the drawn image, so the box (in % of the frame) matches the image.
+   Only the clip layer hides overflow (the dimming); the corners stay unclipped, and the padding keeps a corner on
+   the image's edge fully on screen (UX-LAY-008). Cyan, like the lesion markers, stands out on a grayscale photo
+   (UX-VIS-011). */
+.cropper {
+  display: flex; justify-content: center; background: var(--color-surface-sunken); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card); padding: calc(var(--target-min) / 2 + var(--space-1));
+}
+.cropper__frame { position: relative; line-height: 0; }
+.cropper__frame--placing { cursor: crosshair; }
+/* Overrides the plain preview's fixed 3:4 box: here the image keeps its own proportions. */
+.preview .cropper__frame img {
+  display: block; inline-size: auto; max-inline-size: 100%; max-block-size: 70vh; aspect-ratio: auto; object-fit: fill;
+  border-radius: 0; box-shadow: none; background: none; user-select: none;
+}
+.preview__placeholder {
+  inline-size: 100%; aspect-ratio: 3 / 4; background: var(--color-surface-sunken); border-radius: var(--radius-lg);
+}
+.cropper__clip { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.cropper__box {
+  position: absolute; border: var(--border-width-strong) solid var(--color-marker);
+  box-shadow: 0 0 0 100vmax var(--color-scrim);
+}
+.cropper__handle {
+  position: absolute; inline-size: var(--target-min); block-size: var(--target-min); transform: translate(-50%, -50%);
+  padding: 0; border: 0; border-radius: var(--radius-full); background: transparent; cursor: grab; touch-action: none;
+}
+.cropper__handle::after {
+  content: ""; position: absolute; inset: var(--space-3); border-radius: var(--radius-full); background: var(--color-marker);
+  box-shadow: 0 0 0 var(--border-width-strong) var(--color-on-marker);
+}
+.cropper__handle[aria-pressed="true"]::after { inset: var(--space-2); box-shadow: 0 0 0 var(--focus-ring-width) var(--color-on-marker); }
+/* Two-tone focus ring: dark inside, cyan outside, visible on gray, black or white parts of a photo (UX-ACC-004). */
+.cropper__handle:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-on-marker); outline-offset: 0;
+  box-shadow: 0 0 0 calc(var(--focus-ring-width) * 2) var(--color-marker);
+}
+.crop-edges { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+
 /* Result layout */
 .result-layout { display: grid; gap: var(--space-6); align-items: start; grid-template-areas: "aside" "main" "actions"; }
 .result-layout__aside { grid-area: aside; }

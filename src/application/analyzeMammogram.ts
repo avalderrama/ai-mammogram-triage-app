@@ -1,3 +1,4 @@
+import { clampCrop, isFullImage, type CropBox } from '../domain/crop';
 import type { Analysis } from '../domain/triage';
 import { TriageError, toFailure, type Failure } from './errors';
 import type { ImagePreparer, PanelLayout, SettingsRepository, TriageGateway } from './ports';
@@ -8,6 +9,8 @@ export type AnalysisStep = 'preparing' | 'analyzing';
 
 export interface AnalyzeInput {
   readonly file: Blob;
+  /** Part of the image to analyze; the whole image when omitted. */
+  readonly crop?: CropBox;
   readonly panelCount?: number;
   readonly layout?: PanelLayout;
 }
@@ -35,7 +38,9 @@ export function createAnalyzeMammogram(deps: AnalyzeDependencies) {
         throw new TriageError('invalid_input');
       }
       onStep('preparing');
-      const image = await deps.preparer.prepare(input.file, deps.maxImageBytes, signal);
+      const clamped = input.crop && clampCrop(input.crop);
+      const crop = clamped && !isFullImage(clamped) ? clamped : undefined;
+      const image = await deps.preparer.prepare(input.file, deps.maxImageBytes, crop, signal);
       signal?.throwIfAborted();
       onStep('analyzing');
       const analysis = await deps.gateway.analyze(

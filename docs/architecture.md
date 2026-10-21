@@ -33,9 +33,9 @@ flowchart TB
 
 | Layer | Responsibility | Must not import |
 |---|---|---|
-| `domain` | Result types (`Analysis`, `BreastResult`, `ViewResult`, `SuspiciousRegion`) and pure rules: ordering by urgency, whether the result is partial, study quality warnings | React, MCP SDK, zod, other layers |
-| `application` | Use cases: `createAnalyzeMammogram` (validates, prepares, calls and translates errors into a `Failure`) and `createConnectionSettings`. Ports: `TriageGateway`, `ImagePreparer`, `SettingsRepository`. Safe-URL rule | React, SDK, zod, infrastructure, presentation |
-| `infrastructure` | `McpTriageGateway` (SDK `@modelcontextprotocol/client` v2), loaded on the first request by `LazyTriageGateway`; `resultMapping` (zod ↔ domain), `BrowserImagePreparer`, `BrowserSettingsRepository`, service worker registration | React, presentation |
+| `domain` | Result types (`Analysis`, `BreastResult`, `ViewResult`, `SuspiciousRegion`) and pure rules: ordering by urgency, whether the result is partial, study quality warnings. `crop.ts`: the area to analyze (`CropBox`, normalized 0–1) and how its edges and corners move | React, MCP SDK, zod, other layers |
+| `application` | Use cases: `createAnalyzeMammogram` (validates, prepares, calls and translates errors into a `Failure`), `createConnectionSettings` and `createProposeCrop` (the whole image as `uncertain` if detection fails). Ports: `TriageGateway`, `ImagePreparer` (with an optional crop), `CropDetector`, `SettingsRepository`. Safe-URL rule | React, SDK, zod, infrastructure, presentation |
+| `infrastructure` | `McpTriageGateway` (SDK `@modelcontextprotocol/client` v2), loaded on the first request by `LazyTriageGateway`; `resultMapping` (zod ↔ domain), `BrowserImagePreparer` (crops at full resolution, then limits to 4096 px), `CanvasCropDetector` + `imaging/findMammogramArea` (automatic crop), `BrowserSettingsRepository`, service worker registration | React, presentation |
 | `presentation` | React components, hash routes, UI text in English and Spanish (`i18n/`) and token-based styles | SDK, zod, infrastructure |
 | `main.tsx` | Creates the implementations, injects them into the app and wraps it in `I18nProvider` | — |
 
@@ -48,6 +48,7 @@ ESLint (`no-restricted-imports` per folder, in `eslint.config.js`) enforces thes
 | `ImagePicker` | `components/ImagePicker.tsx` | Camera and gallery pickers. Variant `tiles` (default): two large tiles with a hint, used on Home and in the empty Review state. Variant `compact`: two secondary buttons, used to change the image in Review |
 | `Probabilities` | `components/Probabilities.tsx` | One stacked bar with the three BI-RADS groups (decorative, `aria-hidden`) plus a text legend with the percentages |
 | `LesionViewer` | `components/LesionViewer.tsx` | The heatmap of a view with numbered boxes on the suspicious regions (1 = strongest), placed in percentages of the image so they stay aligned at any size. A **Show markers** checkbox hides the boxes. Below, a text list ("Area N: depth, vertical part of the breast") repeats each location for screen readers and for anyone who hides the boxes. It shows a note when no region stands out and, without a heatmap, the reason (low resolution or not generated) |
+| `CropEditor`, `CropActions` | `components/CropEditor.tsx` | The picked image with the crop box (outside dimmed) and four corners: drag (one pointer at a time), tap-then-tap (single-pointer alternative, `UX-ACC-016`) or arrow keys; buttons to move each edge in or out (screen readers on phones); the new area is announced after keyboard and button moves. Reset and whole-image buttons |
 | `LevelBadge`, `Banner`, `FailurePanel`, `Disclaimer` | `components/Feedback.tsx` | Level with icon + text + color, view-wide messages, errors with a way out and the reference code, the indicative-result notice |
 
 ## 3. Path of an analysis
@@ -62,11 +63,11 @@ sequenceDiagram
     participant G as McpTriageGateway
     participant S as MCP server
     M->>V: Take photo / Choose saved image
-    V->>V: in-memory preview (object URL)
-    M->>V: Analyze image
-    V->>U: file + optional views (with AbortSignal)
+    V->>V: in-memory preview (object URL) + automatic crop proposal (CanvasCropDetector)
+    M->>V: adjusts the crop if needed, then Analyze image
+    V->>U: file + crop + optional views (with AbortSignal)
     U->>U: configured? is it an image? are the views consistent?
-    U->>P: prepare (keeps it as is or re-encodes to JPEG ≤ limit, ≤ 4096 px)
+    U->>P: prepare (no crop: as is or re-encoded; crop: that area at full resolution, JPEG ≤ limit, ≤ 4096 px)
     U->>G: analyze(base64, views)
     G->>S: initialize + tools/call mammo_analyze_mammogram
     S-->>G: structuredContent (with regions per view) + heatmaps
@@ -82,6 +83,15 @@ first, each with a box normalized from 0 to 1 to the heatmap image, a `score`, a
 defaults the list to `[]` when an older server does not send it. `LesionViewer` draws them over the heatmap. What
 they mean is explained in the server's
 [scores-and-levels.md](https://github.com/avalderrama/ai-mammogram-triage/blob/main/docs/scores-and-levels.md).
+
+**Automatic crop.** Photos of a screen always include part of the monitor, and the server's "is it a mammogram?"
+filter rejects a gray frame around the image. `findMammogramArea` works on a copy reduced to 512 px: from each border
+inward it removes the lines that are one flat gray (the monitor or the viewer around the image), with an optional dark
+bezel before it and short gaps for icons, alternating columns and rows until nothing changes. The black of a
+photographed screen (about 40–50) stays below the frame threshold (60), so the mammogram's own background is never
+removed. It returns the box and its `source`: `detected`, `no_frame` (nothing to remove, e.g. a screenshot) or
+`uncertain` (nothing reliable; the whole image is proposed and the user is asked to adjust it). The crop is only in
+memory, like the photo. How it is evaluated on real photos: [crop-evaluation.md](crop-evaluation.md).
 
 The "optional views" are the optional fields in **Review image**. The number of views is sent when the user picks
 one; the breast side and projection of each view are sent when at least one of them is set. Views of the same breast
@@ -148,7 +158,7 @@ be retried and a reference code:
 |---|---|
 | `not_configured` | The URL is missing, or the remote URL is not HTTPS. The key is optional: behind Cloudflare Access the session identifies the user |
 | `not_an_image`, `invalid_input` | Local validation |
-| `not_a_mammogram`, `unreadable_image`, `too_large`, `server_busy`, `unexpected` | MCP tool codes |
+| `not_a_mammogram`, `unreadable_image`, `too_large`, `server_busy`, `unexpected` | MCP tool codes. `not_a_mammogram` and `too_large` offer **Adjust the crop** (`FAILURE_FIX` `crop`), back to Review with the same image and box |
 | `unauthorized` (401), `server_misconfigured` (421/403), `too_large` (413), `rate_limited` (429 with `Retry-After`) | HTTP responses |
 | `offline`, `server_unreachable`, `timeout`, `cancelled` | Network, timeout or the user |
 | `session_expired` | The request was redirected. The MCP server never redirects, so it is Cloudflare Access asking to sign in again. `McpTriageGateway` uses `redirect: 'manual'` so the redirect is visible instead of an opaque CORS failure |

@@ -37,6 +37,7 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
+    "jpeg-js": "0.4.4",
     "jsdom": "29.1.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.1",

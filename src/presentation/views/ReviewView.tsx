@@ -1,6 +1,10 @@
 import { useId, type FormEvent } from 'react';
+import type { Failure } from '../../application/errors';
+import type { CropSource } from '../../application/ports';
+import type { CropBox } from '../../domain/crop';
 import type { BreastSide, ViewType } from '../../domain/triage';
-import { Banner } from '../components/Feedback';
+import { CropActions, CropEditor } from '../components/CropEditor';
+import { Banner, FailurePanel } from '../components/Feedback';
 import { ImagePicker } from '../components/ImagePicker';
 import { useViewHeading } from '../hooks';
 import { useI18n } from '../i18n/I18nProvider';
@@ -15,6 +19,12 @@ export interface ImageOptions {
 }
 
 export const DEFAULT_OPTIONS: ImageOptions = { panelCount: 'auto', sides: [], views: [] };
+
+/** The crop of the picked image: being proposed, ready to adjust, or refused (an image too large to open). */
+export type CropState =
+  | { readonly status: 'detecting' }
+  | { readonly status: 'ready'; readonly source: CropSource; readonly box: CropBox }
+  | { readonly status: 'rejected'; readonly failure: Failure };
 
 const COUNT_CHOICES: { value: PanelCount; key: 'auto' | 'one' | 'two' | 'four' }[] = [
   { value: 'auto', key: 'auto' },
@@ -35,17 +45,21 @@ interface Props {
   onOptionsChange: (options: ImageOptions) => void;
   onAnalyze: () => void;
   onPick: (file: File) => void;
+  crop: CropState;
+  onCropChange: (box: CropBox) => void;
+  onCropReset: () => void;
   configured: boolean;
   online: boolean;
   busy: boolean;
 }
 
-export function ReviewView({ file, previewUrl, options, onOptionsChange, onAnalyze, onPick, configured, online,
-  busy }: Props) {
+export function ReviewView({ file, previewUrl, options, onOptionsChange, onAnalyze, onPick, crop, onCropChange,
+  onCropReset, configured, online, busy }: Props) {
   const { t } = useI18n();
   const r = t.review;
   const heading = useViewHeading<HTMLHeadingElement>(r.docTitle);
   const reasonId = useId();
+  const cropHelpId = useId();
 
   if (!file) {
     return (
@@ -60,7 +74,8 @@ export function ReviewView({ file, previewUrl, options, onOptionsChange, onAnaly
     );
   }
 
-  const blocked = !configured ? r.blockedNotConfigured : !online ? r.blockedOffline : null;
+  const blocked = !configured ? r.blockedNotConfigured : !online ? r.blockedOffline
+    : crop.status === 'detecting' ? r.blockedDetecting : crop.status === 'rejected' ? r.blockedRejected : null;
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!blocked && !busy) onAnalyze();
@@ -75,10 +90,26 @@ export function ReviewView({ file, previewUrl, options, onOptionsChange, onAnaly
     <>
       <h1 ref={heading} tabIndex={-1}>{r.title}</h1>
       <div className="split">
-        <figure className="preview">
-          {previewUrl && <img src={previewUrl} alt={r.previewAlt} />}
-          <figcaption className="text-secondary">{file.name} · {t.megabytes(file.size)}</figcaption>
-        </figure>
+        <div className="stack stack--tight">
+          {crop.status === 'rejected' ? <FailurePanel failure={crop.failure} actions={null} /> : (
+            <figure className="preview">
+              {/* The image is drawn only once its size was checked: a huge one is never decoded on the phone. */}
+              {previewUrl && crop.status === 'ready'
+                ? <CropEditor imageUrl={previewUrl} alt={r.previewAlt} box={crop.box} onChange={onCropChange}
+                  helpId={cropHelpId} />
+                : <div className="preview__placeholder" aria-hidden="true" />}
+              <figcaption className="text-secondary">{file.name} · {t.megabytes(file.size)}</figcaption>
+            </figure>
+          )}
+          <div aria-live="polite" className="stack stack--tight">
+            {crop.status === 'detecting' && <p className="text-secondary">{r.cropDetecting}</p>}
+            {crop.status === 'ready' && crop.source === 'detected' && <p className="text-secondary">{r.cropDetected}</p>}
+            {crop.status === 'ready' && crop.source === 'uncertain' && (
+              <Banner tone="info" title={r.cropUncertainTitle}><p>{r.cropUncertain}</p></Banner>
+            )}
+          </div>
+          {crop.status === 'ready' && <CropActions onReset={onCropReset} onChange={onCropChange} helpId={cropHelpId} />}
+        </div>
         <div className="card stack">
           <form onSubmit={submit} className="stack" noValidate>
             <fieldset className="fieldset">

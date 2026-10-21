@@ -57,12 +57,17 @@ export const en: Messages = {
     not_a_mammogram: {
       title: 'The image doesn’t look like a mammogram',
       body: () => 'Only 2D mammograms in CC or MLO view are analyzed. Ultrasound, MRI and tomosynthesis slices are not, '
-        + 'so no BI-RADS result is shown. If it is a photo of a screen, crop it so the monitor’s edge and the viewer’s gray '
-        + 'background do not show, and try again.',
+        + 'so no BI-RADS result is shown. If it is a photo of a screen, adjust the crop so only the mammogram is inside '
+        + 'the box, without the monitor’s edge or the viewer’s gray background, and try again.',
     },
     unreadable_image: {
       title: 'The image could not be read',
       body: () => 'The file may be damaged or in an unsupported format. Try another photo or screenshot.',
+    },
+    too_many_pixels: {
+      title: 'The image is too large to open',
+      body: () => 'It has more pixels than this device can open safely. Choose a smaller photo or a screenshot of the '
+        + 'mammogram.',
     },
     too_large: {
       title: 'The image is too large',
@@ -181,9 +186,28 @@ export const en: Messages = {
     mlo: 'MLO (mediolateral oblique)',
     blockedNotConfigured: 'First set up the server in Settings.',
     blockedOffline: 'No internet connection: connect to analyze.',
+    blockedDetecting: 'Wait a moment: the app is finding the mammogram in the photo.',
+    blockedRejected: 'This image cannot be analyzed: choose another one.',
     goToSettings: 'Go to Settings',
     analyze: 'Analyze image',
     wrongImage: 'Not the right image?',
+    cropDetecting: 'Finding the mammogram in the photo…',
+    cropDetected: 'The photo was cropped to the mammogram. If something is missing or left over, move the corners.',
+    cropUncertainTitle: 'Check the area to analyze',
+    cropUncertain: 'The mammogram could not be found in the photo with confidence. Move the corners of the box onto it '
+      + 'before analyzing, leaving out the monitor’s edge.',
+    cropHelp: 'Only the area inside the box is analyzed. Drag a corner, or tap it and then tap where it should go. With a '
+      + 'keyboard, the arrow keys move the focused corner (Shift for larger steps).',
+    cropReset: 'Reset the crop',
+    cropFull: 'Use the whole image',
+    cropCorner: (corner) => `${({ 'top-left': 'Top left', 'top-right': 'Top right', 'bottom-right': 'Bottom right',
+      'bottom-left': 'Bottom left' })[corner]} corner of the area to analyze`,
+    cropArea: (b) => `Area to analyze: from ${Math.round(b.x * 100)}% to ${Math.round((b.x + b.width) * 100)}% of the width `
+      + `and from ${Math.round(b.y * 100)}% to ${Math.round((b.y + b.height) * 100)}% of the height.`,
+    cropEdgesSummary: 'Adjust with buttons',
+    cropEdge: (edge) => `${({ top: 'Top', right: 'Right', bottom: 'Bottom', left: 'Left' })[edge]} edge`,
+    cropInward: 'Move in',
+    cropOutward: 'Move out',
   },
   analyzing: {
     docTitle: 'Analyzing',
@@ -220,6 +244,7 @@ export const en: Messages = {
     modelVersion: (v) => `Model version: ${v}.`,
     analyzeAnother: 'Analyze another image',
     backToImage: 'Back to the image',
+    adjustCrop: 'Adjust the crop',
     probabilitiesLabel: 'Estimated probability per BI-RADS group',
     groups: { routine: 'BI-RADS 1-2 (routine follow-up)', shortFollowUp: 'BI-RADS 3 (short-term follow-up)', biopsy: 'BI-RADS 4-5 (biopsy)' },
     viewName: (side, panel, view) => `${side === 'unknown' ? `View ${panel}` : sides[side]}, ${views[view]}`,

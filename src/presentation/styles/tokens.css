@@ -76,6 +76,8 @@
   --color-group-biopsy: var(--red-700);
   --color-marker: var(--cyan-400);
   --color-on-marker: var(--slate-950);
+  /* Dims what lies outside the crop box, over any photo (same in both themes). */
+  --color-scrim: rgb(0 0 0 / 60%);
 
   /* Spacing, base 4 px (UX-VIS-003) */
   --space-1: 0.25rem;

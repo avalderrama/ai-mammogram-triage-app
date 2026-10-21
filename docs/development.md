@@ -53,6 +53,11 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 | `infrastructure/mcp/lazyTriageGateway.test.ts` | Lazy loading, `app_outdated` when the download fails, and a new attempt on the next request |
 | `infrastructure/browserSettingsRepository.test.ts` | The key never goes to `localStorage`; the server URL is remembered |
 | `infrastructure/serviceWorker.test.ts` | The service worker does not intercept the MCP server or store images |
+| `domain/crop.test.ts` | Moving crop edges and corners, limits and minimum size |
+| `infrastructure/imaging/findMammogramArea.test.ts` | Automatic crop on synthetic photos: gray frame, icon bar, dark bezel, two views, no frame, nothing to keep |
+| `infrastructure/canvasCropDetector.test.ts`, `browserImagePreparer.test.ts` | Reduction for detection; crop at full resolution, then the 4096 px limit |
+| `presentation/components/CropEditor.test.tsx` | Dragging, tap-then-tap placement and arrow keys on the corners |
+| `scripts/crop-evaluation.test.ts` | Opt-in (`CROP_PHOTOS_DIR`): the automatic crop on real photos, see [crop-evaluation.md](crop-evaluation.md) |
 | `presentation/i18n/I18nProvider.test.tsx` | Initial language from the browser (`navigator.languages`, with fallback to `navigator.language`); the user's stored choice wins |
 | `presentation/App.test.tsx` | Full flows (English browser), five states, cancellation, double submission, Settings, axe, the lesion markers (the **Show markers** switch hides them; the list of areas in words stays), the probability bar, switching to Spanish (`<html lang>` and remembered choice), the full flow in Spanish, and identical keys in the `es` and `en` catalogs |
 
