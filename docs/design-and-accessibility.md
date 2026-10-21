@@ -78,7 +78,8 @@ overall result.
 
 ## Text and languages
 
-The UI is in **English by default**, with **Spanish** as an option. The strings live in `src/presentation/i18n/`:
+The UI opens in the **browser's language** (Spanish or English; English for any other), and the user can switch
+it. The strings live in `src/presentation/i18n/`:
 
 - `messages.ts` defines the `Messages` type; `en.ts` and `es.ts` implement it.
 - English uses a plain, direct voice. Spanish uses the informal *tú* form and the product's neutral voice.

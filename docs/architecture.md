@@ -11,7 +11,7 @@ The PWA does not analyze anything itself: it prepares the photo and calls the MC
 ```mermaid
 flowchart LR
     DOC["Physician<br/>(phone)"] --> PWA["PWA<br/>React + TypeScript"]
-    PWA -->|"MCP streamable HTTP<br/>HTTPS + key"| MCP["MCP server<br/>ai-mammogram-triage"]
+    PWA -->|"MCP streamable HTTP<br/>HTTPS + Access session or key"| MCP["MCP server<br/>ai-mammogram-triage"]
     MCP --> MODEL[("Models<br/>on the administrator's PC")]
 ```
 
@@ -121,7 +121,8 @@ image abandons the running analysis: its late response is ignored.
 
 ## 5. Languages (i18n)
 
-The UI is in English by default, with Spanish as an option.
+The UI opens in the browser's language (`navigator.languages`: Spanish or English, English for any other language);
+the user's choice in the Language selector wins and is remembered in `localStorage`.
 
 | Piece | Role |
 |---|---|
@@ -145,19 +146,21 @@ be retried and a reference code:
 
 | `kind` | Source |
 |---|---|
-| `not_configured` | The URL or the key is missing, or the remote URL is not HTTPS |
+| `not_configured` | The URL is missing, or the remote URL is not HTTPS. The key is optional: behind Cloudflare Access the session identifies the user |
 | `not_an_image`, `invalid_input` | Local validation |
 | `not_a_mammogram`, `unreadable_image`, `too_large`, `server_busy`, `unexpected` | MCP tool codes |
 | `unauthorized` (401), `server_misconfigured` (421/403), `too_large` (413), `rate_limited` (429 with `Retry-After`) | HTTP responses |
 | `offline`, `server_unreachable`, `timeout`, `cancelled` | Network, timeout or the user |
+| `session_expired` | The request was redirected. The MCP server never redirects, so it is Cloudflare Access asking to sign in again. `McpTriageGateway` uses `redirect: 'manual'` so the redirect is visible instead of an opaque CORS failure |
 | `app_outdated` | `LazyTriageGateway` could not download the MCP client chunk while the browser is online. Typically a newer deployment removed the chunk this tab expects. When the browser is offline, the same failure is reported as `offline` |
 
 `FAILURE_FIX` in `messages.ts` says where the user can fix each failure (Settings, the image, retry, or reload); it
-does not depend on the language. `app_outdated` is not retryable: `FailurePanel` replaces the view's buttons with a
-single **Reload the page** button. After a failed download the gateway forgets it, so the next request tries again.
+does not depend on the language. `app_outdated` and `session_expired` are not retryable: `FailurePanel` replaces the view's buttons with a single
+**Reload the page** button. After a failed download the gateway forgets it, so the next request tries again.
 
 ## 7. Service worker
 
 `public/sw.js` caches only the app shell (HTML, JS, CSS, manifest and icon) so it opens offline. It never intercepts
-requests to another origin (the MCP server) or POST requests, and it never stores image responses except the icon. The
+the MCP server, whether on another origin or on this one (`/mcp`, `/health` behind Cloudflare Access), nor POST
+requests, and it never stores image responses except the icon. The
 tests (`serviceWorker.test.ts`) run the real file against a simulated environment.

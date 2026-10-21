@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { Failure } from '../../application/errors';
 import type { TriageLevel } from '../../domain/triage';
 import { useI18n } from '../i18n/I18nProvider';
+import { FAILURE_FIX } from '../i18n/messages';
 import { Icon, type IconName } from './Icon';
 
 const LEVEL_ICON: Record<TriageLevel, IconName> = { high_priority: 'alert', review: 'eye', no_suspicious_findings: 'check' };
@@ -62,7 +63,7 @@ export function FailurePanel({ failure, headingLevel = 2, actions }:
         <p className="text-secondary">{t.failurePanel.reviewedPanels(failure.rejectedPanels.length)}</p>
       )}
       <div className="actions">
-        {failure.kind === 'app_outdated'
+        {FAILURE_FIX[failure.kind] === 'reload'
           ? <button type="button" className="button button--primary" onClick={() => window.location.reload()}>{t.reload}</button>
           : actions}
       </div>

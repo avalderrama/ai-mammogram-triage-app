@@ -1,7 +1,7 @@
 import { SdkError, SdkErrorCode, UnauthorizedError } from '@modelcontextprotocol/client';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TriageError } from '../../application/errors';
-import { toTriageError } from './mcpTriageGateway';
+import { McpTriageGateway, toTriageError } from './mcpTriageGateway';
 
 const http = (status: number, retryAfter?: number) => ({ status, retryAfter });
 
@@ -29,8 +29,42 @@ describe('toTriageError', () => {
     expect(toTriageError(new Error('x'), {}, controller.signal).kind).toBe('cancelled');
   });
 
+  it('maps a redirect (Cloudflare Access asking to sign in again) to session_expired', () => {
+    expect(toTriageError(new TypeError('Failed to fetch'), { redirected: true, status: 0 }).kind).toBe('session_expired');
+  });
+
   it('passes TriageError through', () => {
     const error = new TriageError('not_a_mammogram');
     expect(toTriageError(error, http(200))).toBe(error);
+  });
+});
+
+describe('McpTriageGateway authentication', () => {
+  const settings = (accessKey: string) => ({ serverUrl: 'https://app.example/mcp', accessKey });
+  const authorization = (init?: RequestInit) => new Headers(init?.headers).get('authorization');
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('sends no Authorization header without a key, and never follows redirects', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => new Response('{}', { status: 401 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(new McpTriageGateway(5_000).testConnection(settings(''))).rejects.toMatchObject({ kind: 'unauthorized' });
+    const init = fetchMock.mock.calls[0]![1];
+    expect(authorization(init)).toBeNull();
+    expect(init?.redirect).toBe('manual');
+  });
+
+  it('sends the key as a bearer token when there is one', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => new Response('{}', { status: 401 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(new McpTriageGateway(5_000).testConnection(settings('k'.repeat(32)))).rejects.toBeInstanceOf(TriageError);
+    expect(authorization(fetchMock.mock.calls[0]![1])).toBe(`Bearer ${'k'.repeat(32)}`);
+  });
+
+  it('reports session_expired when Cloudflare Access redirects to its sign-in page', async () => {
+    const opaqueRedirect = { type: 'opaqueredirect', status: 0, ok: false, headers: new Headers(), body: null,
+      text: async () => '', json: async () => ({}) } as unknown as Response;
+    vi.stubGlobal('fetch', vi.fn(async () => opaqueRedirect));
+    await expect(new McpTriageGateway(5_000).testConnection(settings(''))).rejects.toMatchObject({ kind: 'session_expired' });
   });
 });
