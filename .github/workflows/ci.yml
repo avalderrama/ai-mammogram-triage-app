@@ -1,0 +1,47 @@
+# Typecheck, lint, tests, a production build and a dependency audit on every pull request and on main.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, lint, tests and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Production build (same-origin server, strict CSP)
+        run: npm run build
+        env:
+          VITE_DEFAULT_SERVER_URL: https://app.mammotriage.com/mcp
+      - name: The build only connects to its own server
+        run: grep -q "connect-src 'self' https://app.mammotriage.com" dist/index.html
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm audit --audit-level=high
