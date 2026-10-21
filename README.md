@@ -1,5 +1,7 @@
 # ai-mammogram-triage-app
 
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 An installable web app (PWA) for physicians to try out. You photograph a mammogram on a screen or on film, and the app
 asks the MCP server [`ai-mammogram-triage`](https://github.com/avalderrama/ai-mammogram-triage) for a **priority level
 for each breast**: High priority, Review or No suspicious findings. The result includes probabilities per BI-RADS
@@ -10,6 +12,15 @@ The interface is in **English by default** and can be switched to **Spanish** wi
 header.
 
 > ⚠️ **Research tool.** It is not a medical device and never replaces the radiologist's reading.
+
+## Why this project
+
+My mother went through breast cancer. Seeing what she lived through taught me that, with this disease, acting in
+time is what saves lives. Yet many women do not have quick access to medical care: in parts of Latin America there
+is no radiologist nearby, and a mammogram can wait weeks before someone reads it.
+
+This app is my attempt to help them. With just a phone, a physician can find out which mammograms look the most
+worrying, so those women reach a radiologist first and get care in time. — Alexander Valderrama
 
 It is part of a three-repository project:
 
@@ -67,3 +78,18 @@ npm run lint
 ```bash
 npm test
 ```
+
+## Pilot access
+
+The app needs a server address and an access key. Physicians and researchers who want to try it in a research
+pilot can request them with the **[pilot access form](https://forms.gle/2msrWXkJW7Cj9rYV8)**.
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE); see also [NOTICE](NOTICE). It is provided "as is", without
+warranties of any kind.
+
+## Author
+
+**Alexander Valderrama** · [LinkedIn](https://www.linkedin.com/in/alexander-valderrama-a9a01910) ·
+[@avalderrama](https://github.com/avalderrama)
