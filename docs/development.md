@@ -59,7 +59,8 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs on every pull request and on `main`: typecheck, lint, tests, a production build
-(checking that its CSP only allows its own server) and `npm audit --audit-level=high`. Dependabot
+(checking that its CSP only allows its own server) and `npm audit --audit-level=high`. A change that only touches documentation (Markdown files, `docs/`, `LICENSE`, `NOTICE`) skips the tests;
+the **CI result** job always reports and is the only check the branch protection of `main` requires. Dependabot
 (`.github/dependabot.yml`) opens weekly update pull requests for the npm packages and the GitHub Actions.
 
 ## Deployment
