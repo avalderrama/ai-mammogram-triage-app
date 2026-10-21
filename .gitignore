@@ -17,3 +17,10 @@ coverage/
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Photos from phones and the crop evaluation output (never committed: photos of mammograms)
+*.heic
+*.heif
+*.avif
+*.gif
+crops.json

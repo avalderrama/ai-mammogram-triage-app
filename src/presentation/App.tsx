@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AnalysisStep, AnalyzeMammogram, Outcome } from '../application/analyzeMammogram';
 import type { ConnectionSettingsUseCases } from '../application/connection';
 import { toFailure, TriageError } from '../application/errors';
+import type { CropProposal } from '../application/ports';
+import type { ProposeCrop } from '../application/proposeCrop';
+import type { CropBox } from '../domain/crop';
 import { Banner } from './components/Feedback';
 import { Icon } from './components/Icon';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -11,12 +14,13 @@ import { ROUTES, useRoute } from './routing';
 import { AnalyzingView } from './views/AnalyzingView';
 import { HomeView } from './views/HomeView';
 import { ResultView } from './views/ResultView';
-import { DEFAULT_OPTIONS, ReviewView, type ImageOptions } from './views/ReviewView';
+import { DEFAULT_OPTIONS, ReviewView, type CropState, type ImageOptions } from './views/ReviewView';
 import { SettingsView } from './views/SettingsView';
 
 export interface AppServices {
   readonly analyze: AnalyzeMammogram;
   readonly connection: ConnectionSettingsUseCases;
+  readonly proposeCrop: ProposeCrop;
 }
 
 type Run =
@@ -42,6 +46,9 @@ export function App({ services }: { services: AppServices }) {
   const file = image?.file ?? null;
   const [options, setOptions] = useState<ImageOptions>(DEFAULT_OPTIONS);
   const [run, setRun] = useState<Run>({ status: 'idle' });
+  const [crop, setCrop] = useState<CropState>({ status: 'detecting' });
+  const proposal = useRef<CropProposal | null>(null);
+  const cropDetection = useRef<AbortController | null>(null);
   const [configured, setConfigured] = useState(() => isConfigured(services.connection));
   const controller = useRef<AbortController | null>(null);
 
@@ -61,16 +68,43 @@ export function App({ services }: { services: AppServices }) {
     controller.current = null;
   }, []);
 
+  /** Proposes the crop of a new image; a late proposal for an image that was replaced is ignored. */
+  const detectCrop = useCallback((picked: File) => {
+    cropDetection.current?.abort();
+    const detection = new AbortController();
+    cropDetection.current = detection;
+    proposal.current = null;
+    setCrop({ status: 'detecting' });
+    services.proposeCrop(picked, detection.signal).then((found) => {
+      if (cropDetection.current !== detection) return;
+      proposal.current = found;
+      setCrop({ status: 'ready', source: found.source, box: found.box });
+    }, (error: unknown) => {
+      if (cropDetection.current !== detection || detection.signal.aborted) return;
+      setCrop({ status: 'rejected', failure: toFailure(error, crypto.randomUUID().slice(0, 8).toUpperCase()) });
+    });
+  }, [services]);
+  useEffect(() => () => cropDetection.current?.abort(), []);
+
   const pick = useCallback((picked: File) => {
     detach();
     replaceImage(picked);
     setOptions(DEFAULT_OPTIONS);
     setRun({ status: 'idle' });
+    detectCrop(picked);
     navigate('review');
-  }, [navigate, replaceImage, detach]);
+  }, [navigate, replaceImage, detach, detectCrop]);
+
+  const changeCrop = useCallback((box: CropBox) => {
+    setCrop((c) => (c.status === 'ready' ? { ...c, box } : c));
+  }, []);
+  const resetCrop = useCallback(() => {
+    if (proposal.current) setCrop({ status: 'ready', ...proposal.current });
+  }, []);
 
   const analyze = useCallback(async () => {
-    if (!file || controller.current) return; // prevents double submission (UX-CMP-005)
+    if (!file || controller.current || crop.status !== 'ready') return; // prevents double submission (UX-CMP-005)
+    const box = crop.box;
     const abort = new AbortController();
     controller.current = abort;
     setRun({ status: 'running', step: 'preparing', startedAt: Date.now() });
@@ -78,14 +112,14 @@ export function App({ services }: { services: AppServices }) {
     const count = options.panelCount === 'auto' ? undefined : options.panelCount;
     const layout = count !== undefined && (options.sides.some((s) => s !== 'unknown') || options.views.some((v) => v !== 'unknown'))
       ? { sides: options.sides, views: options.views } : undefined;
-    const outcome = await services.analyze({ file, panelCount: count, layout },
+    const outcome = await services.analyze({ file, crop: box, panelCount: count, layout },
       (step) => setRun((r) => (r.status === 'running' ? { ...r, step } : r)), abort.signal);
     if (controller.current !== abort) return; // abandoned (new image, start over or Back): ignore the late result
     controller.current = null;
     setRun({ status: 'done', outcome });
     // If the user already left with Back, stay where they went; otherwise replace "analyzing" in history.
     if (window.location.hash === ROUTES.analyzing) navigate('result', { replace: true });
-  }, [file, options, navigate, services]);
+  }, [file, crop, options, navigate, services]);
 
   /** Cancels immediately, even while the photo is still being prepared on the phone; the late result is ignored. */
   const cancel = useCallback(() => {
@@ -98,6 +132,10 @@ export function App({ services }: { services: AppServices }) {
 
   const startOver = useCallback(() => {
     detach();
+    cropDetection.current?.abort();
+    cropDetection.current = null;
+    proposal.current = null;
+    setCrop({ status: 'detecting' });
     replaceImage(null);
     setOptions(DEFAULT_OPTIONS);
     setRun({ status: 'idle' });
@@ -117,7 +155,8 @@ export function App({ services }: { services: AppServices }) {
         return <HomeView configured={configured} onPick={pick} />;
       case 'review':
         return <ReviewView file={file} previewUrl={image?.previewUrl ?? null} options={options} onOptionsChange={setOptions}
-          onAnalyze={() => void analyze()} onPick={pick} configured={configured} online={online}
+          onAnalyze={() => void analyze()} onPick={pick} crop={crop} onCropChange={changeCrop} onCropReset={resetCrop}
+          configured={configured} online={online}
           busy={run.status === 'running'} />;
       case 'analyzing':
         return run.status === 'running'

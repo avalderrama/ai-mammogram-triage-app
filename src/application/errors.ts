@@ -6,6 +6,8 @@ export type FailureKind =
   | 'not_a_mammogram'
   | 'unreadable_image'
   | 'too_large'
+  /** Too many pixels to open safely on this device (checked from the file header, before decoding). */
+  | 'too_many_pixels'
   | 'invalid_input'
   | 'unauthorized'
   | 'session_expired'

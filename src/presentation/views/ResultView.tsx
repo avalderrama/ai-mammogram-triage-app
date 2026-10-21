@@ -60,6 +60,7 @@ export function ResultView({ outcome, running, onRetry, onNewImage }: Props) {
               <button type="button" className="button button--primary" onClick={onRetry}>{r.retry}</button>
             )}
             {fix === 'settings' && <a className="button button--primary" href={ROUTES.settings}>{r.goToSettings}</a>}
+            {fix === 'crop' && <a className="button button--primary" href={ROUTES.review}>{r.adjustCrop}</a>}
             <button type="button" className={`button ${fix === 'image' ? 'button--primary' : 'button--secondary'}`}
               onClick={onNewImage}>{r.pickOther}</button>
           </>

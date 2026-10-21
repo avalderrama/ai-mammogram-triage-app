@@ -3,6 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { AnalyzeMammogram, Outcome } from '../application/analyzeMammogram';
 import type { ConnectionSettingsUseCases } from '../application/connection';
+import { TriageError } from '../application/errors';
+import type { CropProposal } from '../application/ports';
+import { FULL_IMAGE } from '../domain/crop';
 import { analysis, breast } from '../test/fixtures';
 import { expectNoSeriousA11yViolations } from '../test/axe';
 import { App, type AppServices } from './App';
@@ -22,9 +25,13 @@ function connection(configured = true): ConnectionSettingsUseCases {
   };
 }
 
-function renderApp(outcome: Outcome | (() => Promise<Outcome>), configured = true, locale?: Locale) {
+const NO_FRAME: CropProposal = { box: FULL_IMAGE, source: 'no_frame' };
+
+function renderApp(outcome: Outcome | (() => Promise<Outcome>), configured = true, locale?: Locale,
+  proposal: CropProposal | (() => Promise<CropProposal>) = NO_FRAME) {
   const analyze = vi.fn(typeof outcome === 'function' ? outcome : async () => outcome) as unknown as AnalyzeMammogram;
-  const services: AppServices = { analyze, connection: connection(configured) };
+  const proposeCrop = vi.fn(typeof proposal === 'function' ? proposal : async () => proposal);
+  const services: AppServices = { analyze, connection: connection(configured), proposeCrop };
   render(<I18nProvider initialLocale={locale}><App services={services} /></I18nProvider>);
   return { analyze, services };
 }
@@ -33,6 +40,7 @@ async function pickAndAnalyze(user = userEvent.setup()) {
   const gallery = document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
   await user.upload(gallery, photo);
   expect(await screen.findByRole('heading', { level: 1, name: 'Review image' })).toBeInTheDocument();
+  await screen.findByRole('button', { name: 'Use the whole image' }); // the crop proposal is ready
   await user.click(screen.getByRole('button', { name: 'Analyze image' }));
 }
 
@@ -263,5 +271,113 @@ describe('Language', () => {
       (v && typeof v === 'object' && !Array.isArray(v) ? shape(v).map((s) => `${k}.${s}`) : [k])).sort();
     expect(shape(es)).toEqual(shape(en));
     expect(es.home.tips).toHaveLength(en.home.tips.length);
+  });
+});
+
+describe('Crop on the review screen', () => {
+  const DETECTED: CropProposal = { box: { x: 0.12, y: 0.02, width: 0.74, height: 0.94 }, source: 'detected' };
+  const cropOf = (analyze: AnalyzeMammogram) => (analyze as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0].crop;
+
+  async function pick(user = userEvent.setup()) {
+    const gallery = document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
+    await user.upload(gallery, photo);
+    await screen.findByRole('button', { name: 'Use the whole image' });
+    return user;
+  }
+
+  it('shows the detected crop and analyzes only that area', async () => {
+    const { analyze } = renderApp({ ok: true, analysis: analysis() }, true, undefined, DETECTED);
+    const user = await pick();
+    expect(screen.getByText(/cropped to the mammogram/)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /corner of the area to analyze/ })).toHaveLength(4);
+    await expectNoSeriousA11yViolations();
+    await user.click(screen.getByRole('button', { name: 'Analyze image' }));
+    expect(cropOf(analyze)).toEqual(DETECTED.box);
+  });
+
+  it('moves a corner with the arrow keys, resets it and can use the whole image', async () => {
+    const { analyze } = renderApp(async () => ({ ok: true, analysis: analysis() }), true, undefined, DETECTED);
+    const user = await pick();
+    screen.getByRole('button', { name: 'Top left corner of the area to analyze' }).focus();
+    await user.keyboard('{ArrowRight}{Shift>}{ArrowDown}{/Shift}');
+    await user.click(screen.getByRole('button', { name: 'Reset the crop' }));
+    screen.getByRole('button', { name: 'Top left corner of the area to analyze' }).focus();
+    await user.keyboard('{ArrowRight}');
+    await user.click(screen.getByRole('button', { name: 'Analyze image' }));
+    const crop = cropOf(analyze);
+    expect(crop.x).toBeCloseTo(0.13, 6);
+    expect(crop.y).toBeCloseTo(0.02, 6);
+    expect(crop.width).toBeCloseTo(0.73, 6);
+  });
+
+  it('after "not a mammogram", goes back to adjust the crop with the same image and box', async () => {
+    renderApp({ ok: false, failure: { kind: 'not_a_mammogram', correlationId: 'AB12CD34', retryable: false } },
+      true, undefined, DETECTED);
+    const user = await pick();
+    await user.click(screen.getByRole('button', { name: 'Analyze image' }));
+    await screen.findByRole('heading', { name: 'The image doesn’t look like a mammogram' });
+    await user.click(screen.getByRole('link', { name: 'Adjust the crop' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Review image' })).toBeInTheDocument();
+    expect(document.querySelector<HTMLElement>('.cropper__box')!.style.left).toBe('12%');
+  });
+
+  it('can analyze the whole image instead of the proposal', async () => {
+    const { analyze } = renderApp({ ok: true, analysis: analysis() }, true, undefined, DETECTED);
+    const user = await pick();
+    await user.click(screen.getByRole('button', { name: 'Use the whole image' }));
+    await user.click(screen.getByRole('button', { name: 'Analyze image' }));
+    expect(cropOf(analyze)).toEqual(FULL_IMAGE);
+  });
+
+  it('asks to adjust the box when the mammogram was not found with confidence', async () => {
+    renderApp({ ok: true, analysis: analysis() }, true, undefined, { box: FULL_IMAGE, source: 'uncertain' });
+    await pick();
+    expect(screen.getByText('Check the area to analyze')).toBeInTheDocument();
+    expect(screen.getByText(/leaving out the monitor’s edge/)).toBeInTheDocument();
+  });
+
+  it('ignores the late proposal of an image that was replaced', async () => {
+    const resolvers: ((p: CropProposal) => void)[] = [];
+    renderApp({ ok: true, analysis: analysis() }, true, undefined,
+      () => new Promise<CropProposal>((resolve) => { resolvers.push(resolve); }));
+    const user = userEvent.setup();
+    const gallery = () => document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
+    await user.upload(gallery(), photo);
+    await screen.findByText('Finding the mammogram in the photo…');
+    await user.upload(gallery(), new File(['other'], 'other.jpg', { type: 'image/jpeg' }));
+    await act(async () => resolvers[1]!(DETECTED));
+    await act(async () => resolvers[0]!({ box: { x: 0.4, y: 0.4, width: 0.2, height: 0.2 }, source: 'detected' }));
+    expect(document.querySelector<HTMLElement>('.cropper__box')!.style.left).toBe('12%');
+  });
+
+  it('refuses an image too large to open without drawing it, and blocks the analysis', async () => {
+    const { analyze } = renderApp({ ok: true, analysis: analysis() }, true, undefined,
+      async () => { throw new TriageError('too_many_pixels'); });
+    const user = userEvent.setup();
+    await user.upload(document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!, photo);
+    expect(await screen.findByRole('heading', { name: 'The image is too large to open' })).toBeInTheDocument();
+    expect(screen.queryByAltText(/mammogram/i)).not.toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'Analyze image' });
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    await user.click(button);
+    expect(analyze).not.toHaveBeenCalled();
+    await expectNoSeriousA11yViolations();
+  });
+
+  it('waits for the crop proposal before analyzing', async () => {
+    let finish!: (p: CropProposal) => void;
+    const { analyze } = renderApp({ ok: true, analysis: analysis() }, true, undefined,
+      () => new Promise<CropProposal>((resolve) => { finish = resolve; }));
+    const user = userEvent.setup();
+    const gallery = document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
+    await user.upload(gallery, photo);
+    expect(await screen.findByText('Finding the mammogram in the photo…')).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'Analyze image' });
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    expect(button).toHaveAccessibleDescription(/finding the mammogram/);
+    await user.click(button);
+    expect(analyze).not.toHaveBeenCalled();
+    await act(async () => finish(DETECTED));
+    expect(button).not.toHaveAttribute('aria-disabled', 'true');
   });
 });

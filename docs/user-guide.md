@@ -25,9 +25,9 @@ device.
 
 ## 2. Taking a good photo
 
-- Move closer until the mammogram fills the photo: the monitor's edge, the viewer's gray background and the icon
-  bars should not show. If some edge remains, crop it in your gallery before choosing the image. A gray frame around
-  the mammogram makes the app reject it as "not a mammogram".
+- Move closer until the mammogram fills most of the photo. The app crops the monitor's edge, the viewer's gray
+  background and the icon bars by itself (see "Checking the area to analyze" below), but the closer you are, the
+  more resolution is left for the analysis.
 - Frame a single mammogram, or the views you want to compare.
 - Face the screen squarely, with no flash and no reflected lights.
 - Tap the breast on the phone screen to focus, and keep your hand steady.
@@ -44,6 +44,23 @@ device.
      each one.
    - If you leave "Detect automatically" or "I don't know", each view is evaluated on its own.
 3. Tap **Analyze image**. It usually takes 5 to 30 seconds. You can tap **Cancel analysis** at any time.
+
+### Checking the area to analyze
+
+On **Review image**, the photo shows a cyan box: **only what is inside is analyzed**. The app proposes it by itself,
+leaving out the monitor's edge, the viewer's gray background and the icon bars; with several views side by side, the
+box covers all of them.
+
+- If something is missing or left over, move the corners: **drag** one, or **tap** it and then **tap** where it
+  should go. With a keyboard, the arrow keys move the focused corner (Shift for larger steps). Under **Adjust with
+  buttons**, each edge can also be moved in or out, which works with a screen reader.
+- **Reset the crop** brings back the proposal; **Use the whole image** analyzes everything.
+- If the app could not find the mammogram with confidence, it says so and proposes the whole image: move the corners
+  onto the mammogram before analyzing.
+- If the result says **The image doesn't look like a mammogram** or **The image is too large**, tap **Adjust the
+  crop**: you go back to the same photo and box. (**The image is too large to open** is different: the file has too
+  many pixels for the phone, and no crop helps; choose a smaller photo or a screenshot.) A box that still includes part of the monitor or the viewer's background is the most common cause.
+  Photos of screens are still harder for the analysis than the original file.
 
 ## 4. Reading the result
 
