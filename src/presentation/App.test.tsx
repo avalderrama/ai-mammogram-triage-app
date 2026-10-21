@@ -36,7 +36,7 @@ async function pickAndAnalyze(user = userEvent.setup()) {
   await user.click(screen.getByRole('button', { name: 'Analyze image' }));
 }
 
-describe('App (English by default)', () => {
+describe('App (English browser)', () => {
   it('home offers camera and gallery, shows the disclaimer and has no serious a11y violations', async () => {
     renderApp({ ok: true, analysis: analysis() });
     expect(document.documentElement.lang).toBe('en');
@@ -109,6 +109,16 @@ describe('App (English by default)', () => {
     await expectNoSeriousA11yViolations();
   });
 
+  it('asks to reload and sign in again when the Cloudflare Access session expired', async () => {
+    renderApp({ ok: false, failure: { kind: 'session_expired', correlationId: 'EF56GH78', retryable: false } });
+    await pickAndAnalyze();
+    expect(await screen.findByRole('heading', { name: 'Your session has expired' })).toBeInTheDocument();
+    expect(screen.getByText(/sign in again with your e-mail/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reload the page' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Go to Settings' })).not.toBeInTheDocument();
+    await expectNoSeriousA11yViolations();
+  });
+
   it('shows real progress steps, lets the user cancel and offers a retry', async () => {
     let finish!: (o: Outcome) => void;
     const user = userEvent.setup();
@@ -142,7 +152,7 @@ describe('App (English by default)', () => {
     await user.upload(gallery, photo);
     const button = await screen.findByRole('button', { name: 'Analyze image' });
     expect(button).toHaveAttribute('aria-disabled', 'true');
-    expect(button).toHaveAccessibleDescription(/set up the server and the key/);
+    expect(button).toHaveAccessibleDescription(/set up the server in Settings/);
     await user.click(button);
     expect(analyze).not.toHaveBeenCalled();
   });
@@ -205,6 +215,20 @@ describe('Settings', () => {
     await user.click(screen.getByRole('button', { name: 'Save and test connection' }));
     expect(await screen.findByText('Connection OK')).toBeInTheDocument();
     expect(services.connection.test).toHaveBeenCalledWith({ serverUrl: 'https://tunnel.example/mcp', accessKey: 'k'.repeat(30) });
+  });
+
+  it('saves without an access key: behind Cloudflare Access the sign-in is enough', async () => {
+    window.location.hash = '#/settings';
+    const user = userEvent.setup();
+    const { services } = renderApp({ ok: true, analysis: analysis() }, false);
+    const key = await screen.findByLabelText(/Access key/);
+    expect(key).not.toBeRequired();
+    expect(screen.getByText('(optional)')).toBeInTheDocument();
+    await user.type(screen.getByLabelText(/Server address/), 'https://app.example/mcp');
+    await user.click(screen.getByRole('button', { name: 'Save and test connection' }));
+    expect(await screen.findByText('Connection OK')).toBeInTheDocument();
+    expect(key).not.toHaveAttribute('aria-invalid');
+    expect(services.connection.test).toHaveBeenCalledWith({ serverUrl: 'https://app.example/mcp', accessKey: '' });
   });
 });
 

@@ -127,6 +127,7 @@ export interface Messages {
     readonly title: string;
     readonly lead: string;
     readonly required: string;
+    readonly optional: string;
     readonly serverLabel: string;
     readonly serverHint: string;
     readonly keyLabel: string;
@@ -144,7 +145,6 @@ export interface Messages {
     readonly errors: {
       readonly serverMissing: string;
       readonly serverInvalid: string;
-      readonly keyMissing: string;
       readonly keyShort: string;
     };
   };
@@ -162,6 +162,7 @@ export const FAILURE_FIX: Record<FailureKind, 'settings' | 'image' | 'retry' | '
   too_large: 'image',
   invalid_input: 'image',
   unauthorized: 'settings',
+  session_expired: 'reload',
   server_misconfigured: 'settings',
   server_busy: 'retry',
   app_outdated: 'reload',

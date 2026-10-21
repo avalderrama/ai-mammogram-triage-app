@@ -48,7 +48,7 @@ export const en: Messages = {
   failures: {
     not_configured: {
       title: 'The connection is not set up',
-      body: () => 'Enter the server address (https) and the pilot access key.',
+      body: () => 'Enter the server address (https).',
     },
     not_an_image: {
       title: 'The file is not an image',
@@ -73,8 +73,14 @@ export const en: Messages = {
         + 'automatically”. Otherwise, try another image.',
     },
     unauthorized: {
-      title: 'The access key is not valid',
-      body: () => 'Check it in Settings or ask the pilot administrator for a new one.',
+      title: 'Access was denied',
+      body: () => 'If the pilot gave you an access key, check it in Settings or ask the pilot administrator for a new '
+        + 'one. If you sign in with your e-mail, reload the page; if it keeps happening, tell the pilot administrator.',
+    },
+    session_expired: {
+      title: 'Your session has expired',
+      body: () => 'Reload the page and sign in again with your e-mail and the code you receive. Then choose the image '
+        + 'again.',
     },
     server_misconfigured: {
       title: 'The server rejects this connection',
@@ -132,7 +138,7 @@ export const en: Messages = {
     lead: 'Photograph a mammogram on a screen or film and get a priority level for each breast: high priority, '
       + 'review or no suspicious findings.',
     beforeStartTitle: 'Before you start',
-    beforeStartBody: 'Set the server address and the access key in',
+    beforeStartBody: 'Set the server address in',
     settingsLink: 'Settings',
     eyebrow: 'Research pilot',
     howTitle: 'How it works',
@@ -170,7 +176,7 @@ export const en: Messages = {
     left: 'Left',
     cc: 'CC (craniocaudal)',
     mlo: 'MLO (mediolateral oblique)',
-    blockedNotConfigured: 'First set up the server and the key in Settings.',
+    blockedNotConfigured: 'First set up the server in Settings.',
     blockedOffline: 'No internet connection: connect to analyze.',
     goToSettings: 'Go to Settings',
     analyze: 'Analyze image',
@@ -233,10 +239,12 @@ export const en: Messages = {
     title: 'Connection settings',
     lead: 'Details from the pilot administrator to connect the app to the analysis server.',
     required: '(required)',
+    optional: '(optional)',
     serverLabel: 'Server address',
     serverHint: 'Ends in /mcp. Example: https://example.trycloudflare.com/mcp',
     keyLabel: 'Access key',
-    keyHint: 'It is not stored on this device unless you tick the box below.',
+    keyHint: 'Only if the pilot gave you one: you don’t need it when you sign in with your e-mail. It is not stored on '
+      + 'this device unless you tick the box below.',
     show: 'Show',
     hide: 'Hide',
     remember: 'Remember the key while this tab is open',
@@ -250,7 +258,6 @@ export const en: Messages = {
     errors: {
       serverMissing: 'Enter the server address.',
       serverInvalid: 'Use an address starting with https:// (for example https://example.trycloudflare.com/mcp).',
-      keyMissing: 'Enter the access key.',
       keyShort: 'The key has at least 24 characters. Check that it is complete.',
     },
   },

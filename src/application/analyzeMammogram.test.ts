@@ -34,6 +34,15 @@ describe('analyzeMammogram', () => {
     expect(analyze).not.toHaveBeenCalled();
   });
 
+  it('analyzes without an access key when the server address is set (Cloudflare Access session)', async () => {
+    const analyze = vi.fn(async () => analysis());
+    const outcome = await setup({ analyze }, {
+      load: () => ({ serverUrl: 'https://app.example/mcp', accessKey: '', rememberKey: false }), save: () => {},
+    })({ file: image });
+    expect(outcome.ok).toBe(true);
+    expect(analyze).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ accessKey: '' }), undefined);
+  });
+
   it('rejects non-image files', async () => {
     const outcome = await setup()({ file: new Blob(['%PDF'], { type: 'application/pdf' }) });
     expect(!outcome.ok && outcome.failure.kind).toBe('not_an_image');

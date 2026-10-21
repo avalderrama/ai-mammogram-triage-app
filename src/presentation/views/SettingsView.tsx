@@ -7,7 +7,7 @@ import { useViewHeading } from '../hooks';
 import { useI18n } from '../i18n/I18nProvider';
 
 type Field = 'serverUrl' | 'accessKey';
-type ErrorKey = 'serverMissing' | 'serverInvalid' | 'keyMissing' | 'keyShort';
+type ErrorKey = 'serverMissing' | 'serverInvalid' | 'keyShort';
 type Errors = Partial<Record<Field, ErrorKey>>;
 
 /** Returns message keys, not text, so errors re-render in the new language if the user switches. */
@@ -15,8 +15,8 @@ function validate(serverUrl: string, accessKey: string): Errors {
   const errors: Errors = {};
   if (!serverUrl.trim()) errors.serverUrl = 'serverMissing';
   else if (!parseServerUrl(serverUrl)) errors.serverUrl = 'serverInvalid';
-  if (!accessKey.trim()) errors.accessKey = 'keyMissing';
-  else if (accessKey.trim().length < 24) errors.accessKey = 'keyShort';
+  // Optional: not needed behind Cloudflare Access. When given, it must look complete.
+  if (accessKey.trim() && accessKey.trim().length < 24) errors.accessKey = 'keyShort';
   return errors;
 }
 
@@ -63,11 +63,11 @@ export function SettingsView({ connection, onSaved }: { connection: ConnectionSe
             {errors.serverUrl && <p id="server-url-error" className="field__error"><Icon name="error" /> {s.errors[errors.serverUrl]}</p>}
           </div>
           <div className="field">
-            <label htmlFor="access-key" className="field__label">{s.keyLabel} <span className="text-secondary">{s.required}</span></label>
+            <label htmlFor="access-key" className="field__label">{s.keyLabel} <span className="text-secondary">{s.optional}</span></label>
             <p id="access-key-hint" className="field__hint">{s.keyHint}</p>
             <div className="field__row">
               <input id="access-key" ref={keyRef} type={showKey ? 'text' : 'password'} autoComplete="off"
-                spellCheck={false} value={accessKey} onChange={(e) => setAccessKey(e.target.value)} required
+                spellCheck={false} value={accessKey} onChange={(e) => setAccessKey(e.target.value)}
                 aria-invalid={errors.accessKey ? true : undefined}
                 aria-describedby={`access-key-hint${errors.accessKey ? ' access-key-error' : ''}`} />
               <button type="button" className="button button--secondary" aria-pressed={showKey}

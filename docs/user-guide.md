@@ -5,24 +5,23 @@
 
 ## 1. Before you start
 
-The pilot administrator will give you three things:
+**In the pilot (https://app.mammotriage.com):** open the address in your phone's browser and sign in with the e-mail
+the pilot administrator approved. You receive a one-time code by e-mail; the session lasts a week. The server address
+is already set, and you need no access key. If you like, add the app to your home screen from the browser menu, with
+"Install" or "Add to Home screen".
 
-1. The **app address**: open it in your phone's browser. If you like, add it to your home screen from the browser
-   menu, with "Install" or "Add to Home screen".
-2. The **server address**: it ends in `/mcp`.
-3. The **access key**: it has at least 24 characters.
+When the session expires, the app says **"Your session has expired"**: tap **Reload the page** and sign in again.
 
-Go to **Settings**, enter the server address and the key, and tap **Save and test connection**. If you see
-"Connection OK", you are ready to analyze.
-
-The key is not stored on the phone. If you tick "Remember the key while this tab is open", it is cleared when you
-close the tab.
+**With another server**, the pilot administrator gives you its address (it ends in `/mcp`) and, if it does not use
+sign-in by e-mail, an **access key** of at least 24 characters. Go to **Settings**, enter them and tap **Save and test
+connection**. If you see "Connection OK", you are ready to analyze. The key is not stored on the phone. If you tick
+"Remember the key while this tab is open", it is cleared when you close the tab.
 
 ### Changing the language
 
-The app is in English by default. To use it in Spanish, open the **Language** selector in the header (it shows
-"English") and choose **Español**. The app remembers your choice on this device. To go back, choose **English** in the
-same selector.
+The app opens in your phone's language: Spanish if the phone is in Spanish, English otherwise. To change it, open
+the **Language** selector in the header and choose **Español** or **English**. The app remembers your choice on this
+device.
 
 ## 2. Taking a good photo
 
@@ -101,7 +100,8 @@ administrator.
 | Message | What to do |
 |---|---|
 | The image doesn't look like a mammogram | Only 2D mammograms (CC or MLO) are analyzed. Ultrasound, MRI and tomosynthesis are not |
-| The access key is not valid | Check Settings or ask for a new one |
+| Access was denied | If you use an access key, check it in Settings or ask for a new one. If you sign in with your e-mail, reload the page; if it keeps happening, tell the pilot administrator |
+| Your session has expired | Tap **Reload the page** and sign in again with your e-mail and the code |
 | The server could not be reached | It may be off, or its address changed. Ask for the new address |
 | The server is busy / Too many requests in a row | Wait a few seconds and tap **Try again** |
 | No internet connection | Connect to a network. Your image is still selected |
