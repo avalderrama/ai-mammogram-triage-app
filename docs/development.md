@@ -56,6 +56,12 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 | `presentation/i18n/I18nProvider.test.tsx` | Initial language from the browser (`navigator.languages`, with fallback to `navigator.language`); the user's stored choice wins |
 | `presentation/App.test.tsx` | Full flows (English browser), five states, cancellation, double submission, Settings, axe, the lesion markers (the **Show markers** switch hides them; the list of areas in words stays), the probability bar, switching to Spanish (`<html lang>` and remembered choice), the full flow in Spanish, and identical keys in the `es` and `en` catalogs |
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and on `main`: typecheck, lint, tests, a production build
+(checking that its CSP only allows its own server) and `npm audit --audit-level=high`. Dependabot
+(`.github/dependabot.yml`) opens weekly update pull requests for the npm packages and the GitHub Actions.
+
 ## Deployment
 
 - `npm run build` produces `dist/` with a Content Security Policy (CSP) in a `<meta>` tag. With
