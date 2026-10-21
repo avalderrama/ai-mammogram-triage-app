@@ -25,7 +25,10 @@ device.
 
 ## 2. Taking a good photo
 
-- Frame a single mammogram, or the views you want to compare, without the rest of the screen.
+- Move closer until the mammogram fills the photo: the monitor's edge, the viewer's gray background and the icon
+  bars should not show. If some edge remains, crop it in your gallery before choosing the image. A gray frame around
+  the mammogram makes the app reject it as "not a mammogram".
+- Frame a single mammogram, or the views you want to compare.
 - Face the screen squarely, with no flash and no reflected lights.
 - Tap the breast on the phone screen to focus, and keep your hand steady.
 - If you have the original file (for example, a screenshot from the viewer or an export), use it: at **1500 px of

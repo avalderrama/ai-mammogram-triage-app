@@ -57,7 +57,8 @@ export const es: Messages = {
     not_a_mammogram: {
       title: 'La imagen no parece una mamografía',
       body: () => 'Solo se analizan mamografías 2D en proyección CC o MLO. Las ecografías, resonancias y cortes de '
-        + 'tomosíntesis no se analizan, así que no se muestra ningún resultado BI-RADS.',
+        + 'tomosíntesis no se analizan, así que no se muestra ningún resultado BI-RADS. Si es una foto de la pantalla, '
+        + 'recórtala para que no se vea el borde del monitor ni el fondo gris del visor, y vuelve a intentarlo.',
     },
     unreadable_image: {
       title: 'No se pudo leer la imagen',
@@ -151,7 +152,9 @@ export const es: Messages = {
     ],
     tipsTitle: 'Cómo tomar una buena foto',
     tips: [
-      'Encuadra una sola mamografía o las vistas que quieras comparar, sin el resto de la pantalla.',
+      'Acércate hasta que la mamografía llene la foto: que no se vea el borde del monitor, el fondo gris del visor ni '
+        + 'las barras de íconos. Si queda borde, recórtalo en la galería antes de elegir la imagen.',
+      'Encuadra una sola mamografía o las vistas que quieras comparar.',
       'Ponte de frente a la pantalla, sin flash y sin luces que se reflejen.',
       'Toca la mama en la pantalla del celular para enfocar y mantén el pulso firme.',
       'Si tienes el archivo original, úsalo: con más resolución se activa el mapa de calor.',

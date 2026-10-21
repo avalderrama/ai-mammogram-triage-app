@@ -57,7 +57,8 @@ export const en: Messages = {
     not_a_mammogram: {
       title: 'The image doesn’t look like a mammogram',
       body: () => 'Only 2D mammograms in CC or MLO view are analyzed. Ultrasound, MRI and tomosynthesis slices are not, '
-        + 'so no BI-RADS result is shown.',
+        + 'so no BI-RADS result is shown. If it is a photo of a screen, crop it so the monitor’s edge and the viewer’s gray '
+        + 'background do not show, and try again.',
     },
     unreadable_image: {
       title: 'The image could not be read',
@@ -149,7 +150,9 @@ export const en: Messages = {
     ],
     tipsTitle: 'How to take a good photo',
     tips: [
-      'Frame a single mammogram, or the views you want to compare, without the rest of the screen.',
+      'Move closer until the mammogram fills the photo: the monitor’s edge, the viewer’s gray background and the icon '
+        + 'bars should not show. If some edge remains, crop it in your gallery before choosing the image.',
+      'Frame a single mammogram, or the views you want to compare.',
       'Face the screen squarely, with no flash and no reflected lights.',
       'Tap the breast on the phone screen to focus and keep your hand steady.',
       'If you have the original file, use it: higher resolution enables the heatmap.',
