@@ -48,7 +48,7 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 |---|---|
 | `domain/triage.test.ts` | Ordering by urgency, partial result and warnings |
 | `application/analyzeMammogram.test.ts` | Validation, steps, error translation and cancellation |
-| `infrastructure/mcp/resultMapping.test.ts` | Contract with the server (zod), order and size of the heatmaps, and error codes |
+| `infrastructure/mcp/resultMapping.test.ts` | Contract with the server (zod), order and size of the heatmaps (one image per view, or the breast and its red layer with `heatmap_format: "layers"`), and error codes |
 | `infrastructure/mcp/mcpTriageGateway.test.ts` | HTTP responses and SDK errors → `kind`; no `Authorization` header without a key; a redirect (Cloudflare Access) → `session_expired` |
 | `infrastructure/mcp/lazyTriageGateway.test.ts` | Lazy loading, `app_outdated` when the download fails, and a new attempt on the next request |
 | `infrastructure/browserSettingsRepository.test.ts` | The key never goes to `localStorage`; the server URL is remembered |
@@ -59,7 +59,7 @@ ESLint includes the `jsx-a11y` accessibility rules, the React Hooks rules and th
 | `presentation/components/CropEditor.test.tsx` | Dragging, tap-then-tap placement and arrow keys on the corners |
 | `scripts/crop-evaluation.test.ts` | Opt-in (`CROP_PHOTOS_DIR`): the automatic crop on real photos, see [crop-evaluation.md](crop-evaluation.md) |
 | `presentation/i18n/I18nProvider.test.tsx` | Initial language from the browser (`navigator.languages`, with fallback to `navigator.language`); the user's stored choice wins |
-| `presentation/App.test.tsx` | Full flows (English browser), five states, cancellation, double submission, Settings, axe, the lesion markers (the **Show markers** switch hides them; the list of areas in words stays), the probability bar, switching to Spanish (`<html lang>` and remembered choice), the full flow in Spanish, and identical keys in the `es` and `en` catalogs |
+| `presentation/App.test.tsx` | Full flows (English browser), five states, cancellation, double submission, Settings, axe, the heatmap layer and the lesion markers (**Show heatmap** hides the red layer and keeps the boxes; **Show markers** hides the boxes; the list of areas in words stays; with an older server only **Show markers**), the probability bar, switching to Spanish (`<html lang>` and remembered choice), the full flow in Spanish, and identical keys in the `es` and `en` catalogs |
 
 ## Continuous integration
 
@@ -103,6 +103,6 @@ the **CI result** job always reports and is the only check the branch protection
 | A new error | `FailureKind` in `application/errors.ts`, its text in `failures` in both catalogs, its fix in `FAILURE_FIX` (`messages.ts`), whether it is retryable (`RETRYABLE` in `errors.ts`) and where it is raised (`resultMapping.ts`, `mcpTriageGateway.ts` or `lazyTriageGateway.ts`) |
 | Colors, type sizes, spacing, radii or shadows | Only in `src/presentation/styles/tokens.css`. Components use the semantic layer; a new color is a primitive plus a semantic token, redefined for the dark theme if needed |
 | Layout or breakpoints (480 / 720 / 1024 px) | `src/presentation/styles/app.css`, mobile-first: base styles for phones, then one `@media (min-width: …)` block per breakpoint at the end of the file. The result page order uses `grid-template-areas` |
-| The heatmap viewer and its markers | `src/presentation/components/LesionViewer.tsx`; texts `regionsTitle`, `region`, `regionsNote`, `noRegions` and `showMarkers` in both catalogs |
+| The heatmap viewer and its markers | `src/presentation/components/LesionViewer.tsx`; texts `regionsTitle`, `region`, `regionsNote`, `noRegions`, `showHeatmap`, `showMarkers`, `breastAlt` and `cleanCaption` in both catalogs |
 | The probability chart | `src/presentation/components/Probabilities.tsx` (bar and legend) and the `--color-group-*` tokens |
 | The image pickers | `src/presentation/components/ImagePicker.tsx` (`tiles` or `compact` variant) |

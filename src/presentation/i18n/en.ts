@@ -253,6 +253,10 @@ export const en: Messages = {
       : 'it was not generated for this view.'}`,
     heatmapAlt: (name) => `Heatmap of ${name}: the red areas drew the model’s attention the most.`,
     heatmapCaption: (name) => `${name}. In red, the areas that drew the model’s attention the most.`,
+    breastAlt: (name) => `Mammogram of ${name}, as the model analyzed it.`,
+    cleanCaption: (name) => `${name}, without the heatmap.`,
+    showHeatmap: 'Show heatmap',
+    viewerLayers: 'What to show on the image',
     regionsTitle: 'Where the model looks',
     regionsNote: 'Numbered boxes mark the most suspicious areas, strongest first. They guide the reading; they are not '
       + 'an outline of a lesion.',

@@ -10,6 +10,7 @@ export const breast = (overrides: Partial<BreastResult> = {}): BreastResult => (
   views: [{
     panel: 1, side: 'R', view: 'MLO', probabilities: { routine: 0.1, shortFollowUp: 0.1, biopsy: 0.8 },
     qualityIssues: [], heatmap: { url: 'data:image/png;base64,AAAA', width: 400, height: 768 },
+    heatmapOverlay: { url: 'data:image/png;base64,BBBB', width: 400, height: 768 },
     heatmapUnavailableReason: null,
     regions: [{ x: 0.15, y: 0.75, width: 0.15, height: 0.125, score: 0.98, depth: 'middle', vertical: 'lower' }],
   }],

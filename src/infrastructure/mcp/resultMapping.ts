@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Analysis, BiradsProbabilities, HeatmapImage, RejectedPanel } from '../../domain/triage';
+import type { Analysis, BiradsProbabilities, HeatmapImage, RejectedPanel, ViewResult } from '../../domain/triage';
 import { TriageError, type FailureKind } from '../../application/errors';
 
 const level = z.enum(['high_priority', 'review', 'no_suspicious_findings']);
@@ -21,6 +21,8 @@ const analysisSchema = z.object({
   masked_text_regions: z.number().int().min(0),
   model_version: z.string(),
   rejected_panels: z.array(rejected),
+  // Older servers send one combined image per view and don't say so.
+  heatmap_format: z.enum(['combined', 'layers']).default('combined'),
   breasts: z.array(z.object({
     label: z.string(),
     side,
@@ -66,9 +68,14 @@ const toProbabilities = (p: z.infer<typeof probabilities>): BiradsProbabilities 
 const toRejected = (r: z.infer<typeof rejected>): RejectedPanel =>
   ({ panel: r.panel, mammogramConfidence: r.mammogram_confidence });
 
+const PNG_SIGNATURE = String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+
 /** Reads width and height from the PNG header (IHDR) so the page can reserve the space. */
 function toHeatmap(base64: string): HeatmapImage {
   const header = atob(base64.slice(0, 32));
+  if (!header.startsWith(PNG_SIGNATURE) || header.slice(12, 16) !== 'IHDR') {
+    throw new TriageError('unexpected', { cause: new Error('A heatmap block is not a PNG image.') });
+  }
   const read = (offset: number) =>
     ((header.charCodeAt(offset) << 24) | (header.charCodeAt(offset + 1) << 16)
       | (header.charCodeAt(offset + 2) << 8) | header.charCodeAt(offset + 3)) >>> 0;
@@ -77,7 +84,8 @@ function toHeatmap(base64: string): HeatmapImage {
 
 /**
  * Maps the `mammo_analyze_mammogram` result to the domain model. Heatmaps arrive as image content blocks
- * in the same order as the views flagged `has_heatmap`; they are kept only as in-memory data URLs.
+ * in the same order as the views flagged `has_heatmap`: one per view, or two with heatmap layers (the breast, then
+ * the red areas). They are kept only as in-memory data URLs.
  */
 export function toAnalysis(result: ToolResultLike): Analysis {
   if (result.isError) {
@@ -95,6 +103,23 @@ export function toAnalysis(result: ToolResultLike): Analysis {
     .map((c) => toHeatmap(c.data as string));
   let next = 0;
   const a = parsed.data;
+  const layers = a.heatmap_format === 'layers';
+  // Images are paired with views by position: a count that does not match would put one view's image under
+  // another's label, so the whole result is refused instead.
+  const withHeatmap = a.breasts.flatMap((b) => b.views).filter((v) => v.has_heatmap).length;
+  if (images.length !== withHeatmap * (layers ? 2 : 1)) {
+    throw new TriageError('unexpected', { cause: new Error('The heatmap images do not match the views.') });
+  }
+  const takeView = (): Pick<ViewResult, 'heatmap' | 'heatmapOverlay'> => {
+    const heatmap = images[next++]!;
+    const overlay = layers ? images[next++]! : null;
+    // A red layer that does not fit its breast image cannot be shown, and dropping it would label the clean image
+    // as the heatmap, which reads as "nothing suspicious": refused like a count mismatch.
+    if (overlay && (overlay.width !== heatmap.width || overlay.height !== heatmap.height)) {
+      throw new TriageError('unexpected', { cause: new Error('A heatmap layer does not match its image.') });
+    }
+    return { heatmap, heatmapOverlay: overlay };
+  };
   return {
     overallLevel: a.overall_level,
     maskedTextRegions: a.masked_text_regions,
@@ -113,7 +138,7 @@ export function toAnalysis(result: ToolResultLike): Analysis {
         view: v.view,
         probabilities: toProbabilities(v.probabilities),
         qualityIssues: v.quality_issues,
-        heatmap: v.has_heatmap ? images[next++] ?? null : null,
+        ...(v.has_heatmap ? takeView() : { heatmap: null, heatmapOverlay: null }),
         heatmapUnavailableReason: v.heatmap_unavailable_reason,
         regions: v.regions,
       })),
