@@ -17,6 +17,8 @@ export const es: Messages = {
     navSettings: 'Ajustes',
     languageLabel: 'Idioma',
     footer: 'Herramienta de investigación. Las imágenes no se guardan.',
+    contactTitle: '¿Preguntas o acceso al piloto?',
+    contactWhatsapp: (username) => `WhatsApp: @${username}`,
     offlineTitle: 'Sin conexión a internet',
     offlineBody: 'Puedes seguir revisando la imagen. Para analizarla necesitas conexión.',
   },

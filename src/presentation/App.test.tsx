@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { AnalyzeMammogram, Outcome } from '../application/analyzeMammogram';
 import type { ConnectionSettingsUseCases } from '../application/connection';
+import type { PilotContact } from '../application/contact';
 import { TriageError } from '../application/errors';
 import type { CropProposal } from '../application/ports';
 import { FULL_IMAGE } from '../domain/crop';
@@ -28,11 +29,11 @@ function connection(configured = true): ConnectionSettingsUseCases {
 const NO_FRAME: CropProposal = { box: FULL_IMAGE, source: 'no_frame' };
 
 function renderApp(outcome: Outcome | (() => Promise<Outcome>), configured = true, locale?: Locale,
-  proposal: CropProposal | (() => Promise<CropProposal>) = NO_FRAME) {
+  proposal: CropProposal | (() => Promise<CropProposal>) = NO_FRAME, contact: PilotContact = {}) {
   const analyze = vi.fn(typeof outcome === 'function' ? outcome : async () => outcome) as unknown as AnalyzeMammogram;
   const proposeCrop = vi.fn(typeof proposal === 'function' ? proposal : async () => proposal);
   const services: AppServices = { analyze, connection: connection(configured), proposeCrop };
-  render(<I18nProvider initialLocale={locale}><App services={services} /></I18nProvider>);
+  render(<I18nProvider initialLocale={locale}><App services={services} contact={contact} /></I18nProvider>);
   return { analyze, services };
 }
 
@@ -73,6 +74,20 @@ describe('App (English browser)', () => {
     expect(screen.getByText(en.disclaimer)).toBeInTheDocument();
     expect(screen.getByText(/2 text areas with possible personal data were covered/)).toBeInTheDocument();
     await expectNoSeriousA11yViolations();
+  });
+
+  it('shows how to reach the pilot administrator in the footer, when the deployment sets it', async () => {
+    renderApp({ ok: true, analysis: analysis() }, true, 'es', NO_FRAME, { email: 'admin@example.org', whatsapp: 'pilot.admin', github: 'pilot-admin' });
+    expect(screen.getByText('¿Preguntas o acceso al piloto?')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'admin@example.org' })).toHaveAttribute('href', 'mailto:admin@example.org');
+    expect(screen.getByText('WhatsApp: @pilot.admin')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'GitHub: pilot-admin' })).toHaveAttribute('href', 'https://github.com/pilot-admin');
+    await expectNoSeriousA11yViolations();
+  });
+
+  it('shows no contact section when the deployment sets none', () => {
+    renderApp({ ok: true, analysis: analysis() });
+    expect(screen.queryByText('Questions or access to the pilot')).toBeNull();
   });
 
   it('marks and describes where the model found the most suspicious area', async () => {

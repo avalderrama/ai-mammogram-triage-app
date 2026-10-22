@@ -17,6 +17,8 @@ export const en: Messages = {
     navSettings: 'Settings',
     languageLabel: 'Language',
     footer: 'Research tool. Images are never stored.',
+    contactTitle: 'Questions or access to the pilot',
+    contactWhatsapp: (username) => `WhatsApp: @${username}`,
     offlineTitle: 'No internet connection',
     offlineBody: 'You can keep reviewing the image. You need a connection to analyze it.',
   },

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AnalysisStep, AnalyzeMammogram, Outcome } from '../application/analyzeMammogram';
 import type { ConnectionSettingsUseCases } from '../application/connection';
+import { hasContact, type PilotContact } from '../application/contact';
 import { toFailure, TriageError } from '../application/errors';
 import type { CropProposal } from '../application/ports';
 import type { ProposeCrop } from '../application/proposeCrop';
@@ -37,7 +38,7 @@ function isConfigured(connection: ConnectionSettingsUseCases): boolean {
  * Holds the picked image and the last result in memory only. Leaving the result ("Analyze another image")
  * drops both, so no image or result outlives the session.
  */
-export function App({ services }: { services: AppServices }) {
+export function App({ services, contact = {} }: { services: AppServices; contact?: PilotContact }) {
   const { t } = useI18n();
   const [route, navigate] = useRoute();
   const online = useOnline();
@@ -211,6 +212,19 @@ export function App({ services }: { services: AppServices }) {
       <main id="main" className="container stack" tabIndex={-1}>{view}</main>
       <footer className="footer container">
         <p className="text-secondary">{t.app.footer}</p>
+        {hasContact(contact) && (
+          <div className="contact">
+            <p className="contact__title">{t.app.contactTitle}</p>
+            <ul className="contact__list">
+              {contact.email && <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>}
+              {contact.whatsapp && <li>{t.app.contactWhatsapp(contact.whatsapp)}</li>}
+              {contact.github && (
+                <li><a href={`https://github.com/${contact.github}`} target="_blank" rel="noreferrer">
+                  {`GitHub: ${contact.github}`}</a></li>
+              )}
+            </ul>
+          </div>
+        )}
       </footer>
     </>
   );
