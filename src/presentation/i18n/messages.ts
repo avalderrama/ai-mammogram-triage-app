@@ -19,6 +19,8 @@ export interface Messages {
     readonly navSettings: string;
     readonly languageLabel: string;
     readonly footer: string;
+    readonly contactTitle: string;
+    readonly contactWhatsapp: (username: string) => string;
     readonly offlineTitle: string;
     readonly offlineBody: string;
   };

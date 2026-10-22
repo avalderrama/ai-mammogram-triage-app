@@ -52,6 +52,10 @@ jobs:
       - name: Production build (same-origin server, strict CSP)
         env:
           VITE_DEFAULT_SERVER_URL: https://${{ env.PUBLIC_HOST }}/mcp
+          # How users reach the pilot administrator: repository variables, so they stay out of the public source.
+          VITE_CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+          VITE_CONTACT_WHATSAPP: ${{ vars.CONTACT_WHATSAPP }}
+          VITE_CONTACT_GITHUB: ${{ vars.CONTACT_GITHUB }}
         run: |
           npm ci
           npm run build

@@ -85,6 +85,11 @@ the **CI result** job always reports and is the only check the branch protection
 - If the hosting allows it, add the headers `Content-Security-Policy: frame-ancestors 'none'` and
   `X-Content-Type-Options: nosniff`.
 - `VITE_DEFAULT_SERVER_URL` is baked into the published bundle: do not put a private tunnel address there.
+- The footer shows how to reach the pilot administrator from `VITE_CONTACT_EMAIL`, `VITE_CONTACT_WHATSAPP`
+  (username, with or without `@`) and `VITE_CONTACT_GITHUB`. In production they come from the repository variables
+  `CONTACT_EMAIL`, `CONTACT_WHATSAPP` and `CONTACT_GITHUB` (Settings → Secrets and variables → Actions → Variables),
+  so personal contact details stay out of the public source; only people who pass Cloudflare Access see them. A
+  missing or malformed value is not shown.
 
 ## Dependencies
 

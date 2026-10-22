@@ -92,7 +92,11 @@ main { padding-block: var(--space-6) var(--space-12); }
   border-radius: var(--radius-full); padding-inline: var(--space-3) var(--space-6);
 }
 
-.footer { padding-block: var(--space-8); border-block-start: var(--border-width) solid var(--color-border-subtle); }
+.footer { padding-block: var(--space-8); border-block-start: var(--border-width) solid var(--color-border-subtle); display: flex; flex-direction: column; gap: var(--space-3); }
+.contact { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--font-size-sm); }
+.contact__title { font-weight: var(--font-weight-medium); }
+.contact__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); color: var(--color-text-secondary); }
+.contact__list li, .contact__list a { display: inline-flex; align-items: center; min-block-size: var(--target-min); }
 
 /* Text helpers */
 .lead { font-size: var(--font-size-md); color: var(--color-text-secondary); }

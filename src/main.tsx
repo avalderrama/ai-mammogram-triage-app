@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createAnalyzeMammogram } from './application/analyzeMammogram';
 import { createConnectionSettings } from './application/connection';
+import { pilotContact } from './application/contact';
 import { createProposeCrop } from './application/proposeCrop';
 import { BrowserImagePreparer } from './infrastructure/browserImagePreparer';
 import { BrowserSettingsRepository } from './infrastructure/browserSettingsRepository';
@@ -27,10 +28,17 @@ const services = {
   proposeCrop: createProposeCrop(new CanvasCropDetector()),
 };
 
+// Set by the deployment, not kept in the public source code (deploy.yml).
+const contact = pilotContact({
+  email: import.meta.env.VITE_CONTACT_EMAIL,
+  whatsapp: import.meta.env.VITE_CONTACT_WHATSAPP,
+  github: import.meta.env.VITE_CONTACT_GITHUB,
+});
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider>
-      <App services={services} />
+      <App services={services} contact={contact} />
     </I18nProvider>
   </StrictMode>,
 );
