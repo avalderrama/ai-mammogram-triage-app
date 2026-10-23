@@ -40,6 +40,9 @@ device.
 2. Check the preview. If the image has several views side by side, you can answer "How many views are in the image?"
    and then, under "Optional: set the breast and the view of each panel", choose the **Breast** (Right or Left) and the
    **Projection** (CC or MLO) of each view. Views are counted left to right.
+   - For a figure with four views in two rows (A and B on top, C and D below), choose **4 views in a 2 × 2 grid**:
+     the image is split into four equal parts, counted left to right, top row first. Automatic detection also finds
+     grids, but only when white lines separate the views.
    - Views of the same breast are combined into one result **only if** you set the number of views and the breast of
      each one.
    - If you leave "Detect automatically" or "I don't know", each view is evaluated on its own.

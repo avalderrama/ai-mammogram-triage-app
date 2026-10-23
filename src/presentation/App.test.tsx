@@ -90,6 +90,21 @@ describe('App (English browser)', () => {
     expect(screen.queryByText('Questions or access to the pilot')).toBeNull();
   });
 
+  it('analyzes a 2 x 2 figure as a grid and names each view by its position', async () => {
+    const user = userEvent.setup();
+    const { analyze } = renderApp({ ok: true, analysis: analysis() });
+    const gallery = document.querySelector<HTMLInputElement>('input[type="file"]:not([capture])')!;
+    await user.upload(gallery, photo);
+    await screen.findByRole('button', { name: 'Use the whole image' });
+    await user.click(screen.getByLabelText('4 views in a 2 × 2 grid'));
+    await user.click(screen.getByText('Optional: set the breast and the view of each panel'));
+    expect(screen.getByRole('group', { name: 'Bottom left view' })).toBeInTheDocument();
+    await expectNoSeriousA11yViolations();
+    await user.click(screen.getByRole('button', { name: 'Analyze image' }));
+    await waitFor(() => expect(analyze).toHaveBeenCalledWith(expect.objectContaining({ panelCount: 4, grid: true }),
+      expect.any(Function), expect.any(AbortSignal)));
+  });
+
   it('marks and describes where the model found the most suspicious area', async () => {
     const user = userEvent.setup();
     renderApp({ ok: true, analysis: analysis() });

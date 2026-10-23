@@ -12,6 +12,8 @@ export interface AnalyzeInput {
   /** Part of the image to analyze; the whole image when omitted. */
   readonly crop?: CropBox;
   readonly panelCount?: number;
+  /** The views are in a 2 x 2 grid: panelCount must be 4. */
+  readonly grid?: boolean;
   readonly layout?: PanelLayout;
 }
 
@@ -37,6 +39,7 @@ export function createAnalyzeMammogram(deps: AnalyzeDependencies) {
         && (input.layout.sides.length !== input.panelCount || input.layout.views.length !== input.panelCount)) {
         throw new TriageError('invalid_input');
       }
+      if (input.grid && input.panelCount !== 4) throw new TriageError('invalid_input');
       onStep('preparing');
       const clamped = input.crop && clampCrop(input.crop);
       const crop = clamped && !isFullImage(clamped) ? clamped : undefined;
@@ -44,7 +47,7 @@ export function createAnalyzeMammogram(deps: AnalyzeDependencies) {
       signal?.throwIfAborted();
       onStep('analyzing');
       const analysis = await deps.gateway.analyze(
-        { image, panelCount: input.panelCount, layout: input.layout }, settings, signal);
+        { image, panelCount: input.panelCount, grid: input.grid, layout: input.layout }, settings, signal);
       return { ok: true, analysis };
     } catch (error) {
       return { ok: false, failure: toFailure(error, correlationId, signal?.aborted) };

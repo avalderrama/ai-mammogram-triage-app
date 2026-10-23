@@ -10,7 +10,8 @@ import { useViewHeading } from '../hooks';
 import { useI18n } from '../i18n/I18nProvider';
 import { ROUTES } from '../routing';
 
-export type PanelCount = 'auto' | 1 | 2 | 4;
+/** 'grid': four views in two rows of two (a 2 x 2 figure). */
+export type PanelCount = 'auto' | 1 | 2 | 4 | 'grid';
 
 export interface ImageOptions {
   readonly panelCount: PanelCount;
@@ -26,15 +27,22 @@ export type CropState =
   | { readonly status: 'ready'; readonly source: CropSource; readonly box: CropBox }
   | { readonly status: 'rejected'; readonly failure: Failure };
 
-const COUNT_CHOICES: { value: PanelCount; key: 'auto' | 'one' | 'two' | 'four' }[] = [
+const COUNT_CHOICES: { value: PanelCount; key: 'auto' | 'one' | 'two' | 'four' | 'grid' }[] = [
   { value: 'auto', key: 'auto' },
   { value: 1, key: 'one' },
   { value: 2, key: 'two' },
   { value: 4, key: 'four' },
+  { value: 'grid', key: 'grid' },
 ];
 
+/** How many views a choice means (none for automatic detection). */
+export function viewCount(count: PanelCount): number {
+  if (count === 'auto') return 0;
+  return count === 'grid' ? 4 : count;
+}
+
 function withCount(count: PanelCount): ImageOptions {
-  const n = count === 'auto' ? 0 : count;
+  const n = viewCount(count);
   return { panelCount: count, sides: Array(n).fill('unknown'), views: Array(n).fill('unknown') };
 }
 
@@ -125,10 +133,10 @@ export function ReviewView({ file, previewUrl, options, onOptionsChange, onAnaly
             {options.panelCount !== 'auto' && (
               <details className="details">
                 <summary>{r.layoutSummary}</summary>
-                <p className="text-secondary">{r.layoutHint}</p>
+                <p className="text-secondary">{options.panelCount === 'grid' ? r.gridLayoutHint : r.layoutHint}</p>
                 {options.sides.map((side, i) => (
                   <fieldset key={i} className="fieldset fieldset--inline">
-                    <legend>{r.panelLegend(i + 1)}</legend>
+                    <legend>{options.panelCount === 'grid' ? r.gridPanelLegend(i) : r.panelLegend(i + 1)}</legend>
                     <label className="field">
                       <span className="field__label">{r.sideLabel}</span>
                       <select value={side} onChange={(e) => setPanel(i, 'sides', e.target.value)}>
