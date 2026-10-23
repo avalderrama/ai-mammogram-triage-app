@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import { FULL_IMAGE, moveCorner, moveEdge, type CropBox, type CropCorner, type CropEdge } from '../../domain/crop';
 import { useI18n } from '../i18n/I18nProvider';
 
@@ -7,6 +7,11 @@ const EDGES: readonly CropEdge[] = ['top', 'right', 'bottom', 'left'];
 const KEY_STEP = 0.01;
 const KEY_STEP_LARGE = 0.05;
 const BUTTON_STEP = 0.02;
+// A press that moves less than this is a tap (it selects the corner), not a drag: fingers wobble a little.
+const DRAG_THRESHOLD_PX = 8;
+// The loupe shows the image under the finger, which covers the very corner being placed.
+const LOUPE_PX = 96;
+const LOUPE_ZOOM = 2.5;
 const ARROWS: Record<string, [number, number]> = {
   ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
 };
@@ -20,7 +25,25 @@ function cornerPoint(box: CropBox, corner: CropCorner): [number, number] {
   return [x, y];
 }
 
-interface Drag { pointerId: number; corner: CropCorner; startX: number; startY: number; startBox: CropBox; moved: boolean }
+interface Drag {
+  pointerId: number; corner: CropCorner; startX: number; startY: number; startBox: CropBox; moved: boolean;
+  /** Latest pointer position, applied once per animation frame. */
+  lastX: number; lastY: number;
+}
+
+/** Where the loupe sits (away from the corner being dragged) and what part of the image it shows. */
+function loupeStyle(imageUrl: string, point: [number, number], width: number, height: number) {
+  const [x, y] = point;
+  const radius = LOUPE_PX / 2;
+  return {
+    width: LOUPE_PX, height: LOUPE_PX,
+    left: x < 0.5 ? width - LOUPE_PX - 8 : 8,
+    top: y < 0.35 ? height - LOUPE_PX - 8 : 8,
+    backgroundImage: `url("${imageUrl}")`,
+    backgroundSize: `${width * LOUPE_ZOOM}px ${height * LOUPE_ZOOM}px`,
+    backgroundPosition: `${radius - x * width * LOUPE_ZOOM}px ${radius - y * height * LOUPE_ZOOM}px`,
+  };
+}
 
 interface Props {
   readonly imageUrl: string;
@@ -45,6 +68,10 @@ export function CropEditor({ imageUrl, alt, box, onChange, helpId }: Props) {
   const draggedLast = useRef(false);
   const [selected, setSelected] = useState<CropCorner | null>(null);
   const [announcement, setAnnouncement] = useState('');
+  // The corner under the finger: highlighted from the very first touch, with the loupe while it is held.
+  const [held, setHeld] = useState<{ corner: CropCorner; width: number; height: number } | null>(null);
+  const frameRequest = useRef<number | null>(null);
+  useEffect(() => () => { if (frameRequest.current !== null) cancelAnimationFrame(frameRequest.current); }, []);
 
   const size = () => {
     const rect = frame.current!.getBoundingClientRect();
@@ -59,21 +86,38 @@ export function CropEditor({ imageUrl, alt, box, onChange, helpId }: Props) {
     if (!event.isPrimary || event.button !== 0 || drag.current) return;
     event.currentTarget.setPointerCapture?.(event.pointerId);
     draggedLast.current = false;
-    drag.current = { pointerId: event.pointerId, corner, startX: event.clientX, startY: event.clientY, startBox: box, moved: false };
+    drag.current = { pointerId: event.pointerId, corner, startX: event.clientX, startY: event.clientY, startBox: box,
+      moved: false, lastX: event.clientX, lastY: event.clientY };
+    const { width, height } = size();
+    setHeld({ corner, width, height });
+  };
+  // The box follows the finger 1:1 from where it was grabbed; pointer events can outpace the screen, so the latest
+  // position is applied once per frame instead of re-rendering on every event.
+  const applyDrag = () => {
+    frameRequest.current = null;
+    const current = drag.current;
+    if (!current?.moved) return;
+    const { width, height } = size();
+    change(moveCorner(current.startBox, current.corner, (current.lastX - current.startX) / width,
+      (current.lastY - current.startY) / height), false);
   };
   const moveDrag = (event: PointerEvent<HTMLButtonElement>) => {
     const current = drag.current;
     if (!current || current.pointerId !== event.pointerId) return;
-    const { width, height } = size();
-    const dx = (event.clientX - current.startX) / width;
-    const dy = (event.clientY - current.startY) / height;
-    if (Math.abs(dx) + Math.abs(dy) > 0.002) current.moved = true;
-    if (current.moved) change(moveCorner(current.startBox, current.corner, dx, dy), false);
+    current.lastX = event.clientX;
+    current.lastY = event.clientY;
+    if (Math.hypot(event.clientX - current.startX, event.clientY - current.startY) > DRAG_THRESHOLD_PX) current.moved = true;
+    if (current.moved && frameRequest.current === null) frameRequest.current = requestAnimationFrame(applyDrag);
   };
   const endDrag = (event: PointerEvent<HTMLButtonElement>) => {
     if (drag.current?.pointerId !== event.pointerId) return;
+    if (frameRequest.current !== null) {
+      cancelAnimationFrame(frameRequest.current);
+      applyDrag(); // the last movement is never dropped
+    }
     draggedLast.current = drag.current.moved;
     drag.current = null;
+    setHeld(null);
   };
 
   // A click (tap, Enter or Space) on a corner selects it, to place it with a tap on the image. A mouse drag also ends
@@ -118,10 +162,16 @@ export function CropEditor({ imageUrl, alt, box, onChange, helpId }: Props) {
             <div className="cropper__box"
               style={{ left: percent(box.x), top: percent(box.y), width: percent(box.width), height: percent(box.height) }} />
           </div>
+          {held && (
+            <div className="cropper__loupe" aria-hidden="true"
+              style={loupeStyle(imageUrl, cornerPoint(box, held.corner), held.width, held.height)} />
+          )}
           {CORNERS.map((corner) => {
             const [x, y] = cornerPoint(box, corner);
             return (
-              <button key={corner} type="button" className="cropper__handle" style={{ left: percent(x), top: percent(y) }}
+              <button key={corner} type="button"
+                className={`cropper__handle${held?.corner === corner ? ' cropper__handle--held' : ''}`}
+                style={{ left: percent(x), top: percent(y) }}
                 aria-label={r.cropCorner(corner)} aria-pressed={selected === corner} aria-describedby={helpId}
                 onPointerDown={startDrag(corner)} onPointerMove={moveDrag} onPointerUp={endDrag}
                 onPointerCancel={endDrag} onLostPointerCapture={endDrag} onClick={toggleCorner(corner)}
