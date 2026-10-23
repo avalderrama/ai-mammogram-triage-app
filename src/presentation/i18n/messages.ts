@@ -63,10 +63,15 @@ export interface Messages {
     readonly emptyBody: string;
     readonly previewAlt: string;
     readonly panelCountLegend: string;
-    readonly panelCounts: { readonly auto: string; readonly one: string; readonly two: string; readonly four: string };
+    readonly panelCounts: {
+      readonly auto: string; readonly one: string; readonly two: string; readonly four: string; readonly grid: string;
+    };
     readonly layoutSummary: string;
     readonly layoutHint: string;
     readonly panelLegend: (n: number) => string;
+    readonly gridLayoutHint: string;
+    /** Position of view `index` (0-3) in a 2 x 2 grid. */
+    readonly gridPanelLegend: (index: number) => string;
     readonly sideLabel: string;
     readonly viewLabel: string;
     readonly unknownOption: string;

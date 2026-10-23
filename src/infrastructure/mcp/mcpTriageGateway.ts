@@ -87,6 +87,7 @@ export class McpTriageGateway implements TriageGateway {
         arguments: {
           image_base64: request.image.base64,
           ...(request.panelCount !== undefined && { panel_count: request.panelCount }),
+          ...(request.grid && { panel_arrangement: 'grid' }),
           ...(request.layout && { sides: [...request.layout.sides], views: [...request.layout.views] }),
           include_heatmap: true,
           // The red areas as their own layer, so the doctor can hide them and see the tissue underneath.

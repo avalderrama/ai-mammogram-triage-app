@@ -15,6 +15,8 @@ export interface AnalysisRequest {
   readonly image: PreparedImage;
   /** Number of side-by-side views; omitted means "detect automatically". */
   readonly panelCount?: number;
+  /** The views are in a 2 x 2 grid (panelCount 4), read left to right and top to bottom. */
+  readonly grid?: boolean;
   readonly layout?: PanelLayout;
 }
 

@@ -15,7 +15,7 @@ import { ROUTES, useRoute } from './routing';
 import { AnalyzingView } from './views/AnalyzingView';
 import { HomeView } from './views/HomeView';
 import { ResultView } from './views/ResultView';
-import { DEFAULT_OPTIONS, ReviewView, type CropState, type ImageOptions } from './views/ReviewView';
+import { DEFAULT_OPTIONS, ReviewView, viewCount, type CropState, type ImageOptions } from './views/ReviewView';
 import { SettingsView } from './views/SettingsView';
 
 export interface AppServices {
@@ -110,10 +110,11 @@ export function App({ services, contact = {} }: { services: AppServices; contact
     controller.current = abort;
     setRun({ status: 'running', step: 'preparing', startedAt: Date.now() });
     navigate('analyzing');
-    const count = options.panelCount === 'auto' ? undefined : options.panelCount;
+    const count = options.panelCount === 'auto' ? undefined : viewCount(options.panelCount);
+    const grid = options.panelCount === 'grid';
     const layout = count !== undefined && (options.sides.some((s) => s !== 'unknown') || options.views.some((v) => v !== 'unknown'))
       ? { sides: options.sides, views: options.views } : undefined;
-    const outcome = await services.analyze({ file, crop: box, panelCount: count, layout },
+    const outcome = await services.analyze({ file, crop: box, panelCount: count, grid, layout },
       (step) => setRun((r) => (r.status === 'running' ? { ...r, step } : r)), abort.signal);
     if (controller.current !== abort) return; // abandoned (new image, start over or Back): ignore the late result
     controller.current = null;

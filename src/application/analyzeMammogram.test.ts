@@ -48,6 +48,14 @@ describe('analyzeMammogram', () => {
     expect(!outcome.ok && outcome.failure.kind).toBe('not_an_image');
   });
 
+  it('passes a 2 x 2 grid on, and refuses a grid that is not 4 views', async () => {
+    const analyze = vi.fn(async () => analysis());
+    await setup({ analyze })({ file: image, panelCount: 4, grid: true });
+    expect(analyze).toHaveBeenCalledWith(expect.objectContaining({ panelCount: 4, grid: true }), expect.anything(), undefined);
+    const outcome = await setup()({ file: image, panelCount: 2, grid: true });
+    expect(!outcome.ok && outcome.failure.kind).toBe('invalid_input');
+  });
+
   it('rejects a layout that does not match the panel count', async () => {
     const outcome = await setup()({ file: image, panelCount: 2, layout: { sides: ['R'], views: ['CC'] } });
     expect(!outcome.ok && outcome.failure.kind).toBe('invalid_input');

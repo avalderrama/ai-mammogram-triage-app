@@ -174,11 +174,17 @@ export const en: Messages = {
     emptyBody: 'Take a photo of the mammogram or choose a saved image to review it before analyzing.',
     previewAlt: 'Preview of the chosen image',
     panelCountLegend: 'How many views are in the image?',
-    panelCounts: { auto: 'Detect automatically', one: '1 view', two: '2 views side by side', four: '4 views side by side' },
+    panelCounts: {
+      auto: 'Detect automatically', one: '1 view', two: '2 views side by side', four: '4 views side by side',
+      grid: '4 views in a 2 × 2 grid',
+    },
     layoutSummary: 'Optional: set the breast and the view of each panel',
     layoutHint: 'Views are counted left to right. Views you mark as the same breast are combined into one result; '
       + 'views left as “I don’t know” are evaluated on their own.',
     panelLegend: (n) => `View ${n}`,
+    gridLayoutHint: 'Views are counted left to right, top row first. Views you mark as the same breast are combined '
+      + 'into one result; views left as “I don’t know” are evaluated on their own.',
+    gridPanelLegend: (index) => ['Top left view', 'Top right view', 'Bottom left view', 'Bottom right view'][index] ?? `View ${index + 1}`,
     sideLabel: 'Breast',
     viewLabel: 'Projection',
     unknownOption: 'I don’t know',

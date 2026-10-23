@@ -177,11 +177,18 @@ export const es: Messages = {
     emptyBody: 'Toma una foto de la mamografía o elige una imagen guardada para revisarla antes de analizarla.',
     previewAlt: 'Vista previa de la imagen elegida',
     panelCountLegend: '¿Cuántas vistas hay en la imagen?',
-    panelCounts: { auto: 'Detectar automáticamente', one: '1 vista', two: '2 vistas lado a lado', four: '4 vistas lado a lado' },
+    panelCounts: {
+      auto: 'Detectar automáticamente', one: '1 vista', two: '2 vistas lado a lado', four: '4 vistas lado a lado',
+      grid: '4 vistas en cuadrícula (2 × 2)',
+    },
     layoutSummary: 'Opcional: indicar la mama y la proyección de cada vista',
     layoutHint: 'Las vistas se cuentan de izquierda a derecha. Las que marques como la misma mama se combinan en un '
       + 'solo resultado; las que dejes en «No lo sé» se evalúan por separado.',
     panelLegend: (n) => `Vista ${n}`,
+    gridLayoutHint: 'Las vistas se cuentan de izquierda a derecha, empezando por la fila de arriba. Las que marques como '
+      + 'la misma mama se combinan en un solo resultado; las que dejes en «No lo sé» se evalúan por separado.',
+    gridPanelLegend: (index) => ['Vista de arriba a la izquierda', 'Vista de arriba a la derecha', 'Vista de abajo a la izquierda',
+      'Vista de abajo a la derecha'][index] ?? `Vista ${index + 1}`,
     sideLabel: 'Mama',
     viewLabel: 'Proyección',
     unknownOption: 'No lo sé',
