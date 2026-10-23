@@ -105,6 +105,9 @@
   --font-weight-medium: 500;
   --font-weight-bold: 650;
   --letter-spacing-tight: -0.01em;
+  /* Larger type needs tighter tracking and leading (h1, hero). */
+  --letter-spacing-display: -0.02em;
+  --line-height-display: 1.1;
   --letter-spacing-caps: 0.08em;
 
   /* Shape, elevation, motion (UX-VIS-019) */
@@ -120,6 +123,7 @@
   --shadow-card: 0 1px 2px rgb(15 23 42 / 6%), 0 4px 16px rgb(15 23 42 / 6%);
   --shadow-raised: 0 2px 4px rgb(15 23 42 / 8%), 0 12px 32px rgb(15 23 42 / 12%);
   --shadow-action: 0 4px 14px rgb(29 91 216 / 35%);
+  --duration-press: 100ms;
   --duration-fast: 150ms;
   --duration-base: 250ms;
   --easing-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -167,4 +171,9 @@
     --shadow-raised: 0 2px 4px rgb(0 0 0 / 40%), 0 12px 32px rgb(0 0 0 / 45%);
     --shadow-action: 0 4px 14px rgb(0 0 0 / 40%);
   }
+}
+
+/* More contrast: dividers and card edges as strong as regular borders (both themes). */
+@media (prefers-contrast: more) {
+  :root { --color-border-subtle: var(--color-border); }
 }

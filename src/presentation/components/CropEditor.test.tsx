@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CropBox } from '../../domain/crop';
 import { I18nProvider } from '../i18n/I18nProvider';
@@ -22,22 +22,64 @@ const last = (onChange: ReturnType<typeof vi.fn>) => onChange.mock.calls.at(-1)!
 const pointer = (pointerId: number, clientX: number, clientY: number, extra = {}) =>
   ({ pointerId, clientX, clientY, isPrimary: true, button: 0, ...extra });
 
+/** Animation frames under the test's control: the drag applies the latest pointer position once per frame. */
+let frames: FrameRequestCallback[] = [];
+const runFrame = () => act(() => { const pending = frames; frames = []; pending.forEach((f) => f(0)); });
+
 describe('CropEditor', () => {
   beforeEach(() => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(FRAME as DOMRect);
+    frames = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback));
+    vi.stubGlobal('cancelAnimationFrame', () => { frames = []; });
   });
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
   it('drags a corner by the pointer movement, relative to the image size, without selecting it', () => {
     const onChange = renderEditor();
     const handle = corner('Bottom right');
     fireEvent.pointerDown(handle, pointer(1, 180, 360));
+    fireEvent.pointerMove(handle, pointer(1, 170, 340));
     fireEvent.pointerMove(handle, pointer(1, 160, 320));
+    expect(onChange).not.toHaveBeenCalled(); // applied on the next frame, once for both events
+    runFrame();
+    expect(onChange).toHaveBeenCalledTimes(1);
     expect(last(onChange).width).toBeCloseTo(0.7, 6);
     expect(last(onChange).height).toBeCloseTo(0.7, 6);
     fireEvent.pointerUp(handle, pointer(1, 160, 320));
     fireEvent.click(handle, { detail: 1 }); // the click a mouse sends after the drag
     expect(handle).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('applies the last movement when the finger lifts before the next frame', () => {
+    const onChange = renderEditor();
+    const handle = corner('Bottom right');
+    fireEvent.pointerDown(handle, pointer(1, 180, 360));
+    fireEvent.pointerMove(handle, pointer(1, 160, 320));
+    fireEvent.pointerUp(handle, pointer(1, 160, 320));
+    expect(last(onChange).width).toBeCloseTo(0.7, 6);
+  });
+
+  it('treats a press that wobbles less than a few pixels as a tap that selects the corner', () => {
+    const onChange = renderEditor();
+    const handle = corner('Top left');
+    fireEvent.pointerDown(handle, pointer(1, 20, 40));
+    fireEvent.pointerMove(handle, pointer(1, 24, 43));
+    fireEvent.pointerUp(handle, pointer(1, 24, 43));
+    fireEvent.click(handle, { detail: 1 });
+    expect(handle).toHaveAttribute('aria-pressed', 'true');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('highlights the corner and shows the loupe from the first touch until the finger lifts', () => {
+    renderEditor();
+    const handle = corner('Bottom right');
+    fireEvent.pointerDown(handle, pointer(1, 180, 360));
+    expect(handle).toHaveClass('cropper__handle--held');
+    expect(document.querySelector('.cropper__loupe')).toHaveStyle({ backgroundImage: 'url("blob:photo")' });
+    fireEvent.pointerUp(handle, pointer(1, 180, 360));
+    expect(handle).not.toHaveClass('cropper__handle--held');
+    expect(document.querySelector('.cropper__loupe')).toBeNull();
   });
 
   it('places a tapped corner with a tap on the image (no dragging needed)', () => {

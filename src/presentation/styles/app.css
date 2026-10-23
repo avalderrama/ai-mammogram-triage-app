@@ -21,9 +21,9 @@ h1, h2, h3 {
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-tight);
 }
-h1 { font-size: var(--font-size-xl); }
+h1 { font-size: var(--font-size-xl); letter-spacing: var(--letter-spacing-display); line-height: var(--line-height-display); }
 h2 { font-size: var(--font-size-lg); }
-.heading-sm { font-size: var(--font-size-md); }
+.heading-sm { font-size: var(--font-size-md); letter-spacing: 0; }
 p { margin: 0; max-width: var(--measure); }
 img { max-width: 100%; height: auto; display: block; }
 code { font-size: var(--font-size-sm); }
@@ -126,9 +126,15 @@ main { padding-block: var(--space-6) var(--space-12); }
     transform var(--duration-fast) var(--easing-standard);
 }
 .button--primary { background: var(--color-action); color: var(--color-on-action); box-shadow: var(--shadow-action); }
-.button--primary:hover { background: var(--color-action-hover); border-color: var(--color-action-hover); color: var(--color-on-action); transform: translateY(-1px); }
 .button--secondary { background: var(--color-surface); color: var(--color-action); }
-.button--secondary:hover { background: var(--color-action-soft); color: var(--color-action-hover); }
+/* Hover only with a real hover (a mouse): on touch screens it would stay stuck after the tap. */
+@media (hover: hover) and (pointer: fine) {
+  .button--primary:hover { background: var(--color-action-hover); border-color: var(--color-action-hover); color: var(--color-on-action); transform: translateY(-1px); }
+  .button--secondary:hover { background: var(--color-action-soft); color: var(--color-action-hover); }
+  .tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); }
+}
+/* Feedback the instant a finger or the mouse presses, not when the action completes. */
+.button:active:not([aria-disabled="true"]), .tile:active { transform: scale(0.97); transition-duration: var(--duration-press); }
 .button--block { inline-size: 100%; }
 .button[aria-disabled="true"] { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
 
@@ -158,7 +164,6 @@ main { padding-block: var(--space-6) var(--space-12); }
   border: var(--border-width-strong) solid var(--color-border-subtle); box-shadow: var(--shadow-card);
   transition: transform var(--duration-fast) var(--easing-standard), box-shadow var(--duration-fast) var(--easing-standard);
 }
-.tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); }
 .tile--primary { background: var(--color-action); color: var(--color-on-action); border-color: color-mix(in srgb, var(--color-on-action) 45%, var(--color-action)); }
 .tile__icon {
   display: grid; place-items: center; inline-size: calc(var(--target-min) + var(--space-2)); block-size: calc(var(--target-min) + var(--space-2));
@@ -284,6 +289,19 @@ input[aria-invalid="true"] { border: var(--border-width-strong) solid var(--colo
   box-shadow: 0 0 0 var(--border-width-strong) var(--color-on-marker);
 }
 .cropper__handle[aria-pressed="true"]::after { inset: var(--space-2); box-shadow: 0 0 0 var(--focus-ring-width) var(--color-on-marker); }
+/* The corner under the finger grows at once: the user knows it was caught before moving. */
+.cropper__handle--held { cursor: grabbing; }
+.cropper__handle--held::after { inset: var(--space-1); box-shadow: 0 0 0 var(--focus-ring-width) var(--color-on-marker); }
+/* Magnified image under the finger, away from it (position and zoom set by CropEditor). */
+.cropper__loupe {
+  position: absolute; z-index: 2; pointer-events: none; border-radius: var(--radius-full); background-repeat: no-repeat;
+  background-color: var(--color-surface-sunken);
+  box-shadow: 0 0 0 var(--border-width-strong) var(--color-on-marker), 0 0 0 calc(var(--border-width-strong) * 2) var(--color-marker),
+    var(--shadow-raised);
+}
+.cropper__loupe::before, .cropper__loupe::after { content: ""; position: absolute; background: var(--color-marker); }
+.cropper__loupe::before { inset-inline: 0; inset-block-start: 50%; block-size: 1px; }
+.cropper__loupe::after { inset-block: 0; inset-inline-start: 50%; inline-size: 1px; }
 /* Two-tone focus ring: dark inside, cyan outside, visible on gray, black or white parts of a photo (UX-ACC-004). */
 .cropper__handle:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-on-marker); outline-offset: 0;
@@ -384,6 +402,12 @@ input[aria-invalid="true"] { border: var(--border-width-strong) solid var(--colo
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   .progress__bar { inline-size: 100%; transform: none; }
   .tile:hover, .button--primary:hover { transform: none; }
+  .button:active:not([aria-disabled="true"]), .tile:active { transform: none; filter: brightness(0.92); }
+}
+
+/* Reduced transparency: a solid header instead of the translucent one. */
+@media (prefers-reduced-transparency: reduce) {
+  .header { background: var(--color-surface); backdrop-filter: none; }
 }
 
 /* Small phones and up */
